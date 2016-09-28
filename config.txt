@@ -1,0 +1,5 @@
+# This file is used to tell the code what the system configuration is
+# The microcontroller, and the motor driver should be specified
+# see MotorController.determineDriver() for how to use comments
+microcontroller = RPi
+driver = L298

@@ -31,17 +31,9 @@ class MotorController(Process):
 
 	LEFT = 0
 	RIGHT = 1
+	# the class that will control the motors depending on what platform this code is running on
+	driver = None
 
-	pwmPin = [38, 37]
-	# assuming you're using a L298n and a rpi
-	dirPin = [[31,32], [35,33]]
-
-	pwmObj = [None, None]
-	# flag for motors pwmObj is started
-	pwmStarted = [False, False]
-	freq = 60#Hertz
-	maxDC = 100
-	minDC = 20
 	mPowers = [0, 0]
 	direction = [0, 0]	# forward or backward
 	# set by time.time(), used to stop bot when dced
@@ -67,47 +59,32 @@ class MotorController(Process):
 				self.pipe = kwargs[key]
 			elif key == 'controllerQueue':
 				self.controllerQueue = kwargs[key]
-		self.setupPins()
-		self.initializePWM()
+		self.determineDriver()
 
-	def setupPins(self):
-		GPIO.setmode(GPIO.BOARD)
-		GPIO.setwarnings(False)
-		for i in range(0, 2):
-			GPIO.setup(self.pwmPin[i], GPIO.OUT)
-			for j in range(0, 2):
-				GPIO.setup(self.dirPin[i][j], GPIO.OUT)
-
-	def initializePWM(self):
-		for i in range(0 ,2):
-			self.setDirectionPins()
-		for i in range(0, 2):
-			self.pwmObj[i] = GPIO.PWM(self.pwmPin[i], self.freq)
-			self.pwmStarted[i] = False
-
-	def setDirectionPins(self):
-		for i in range(0, 2):
-			if self.direction[i]:
-				GPIO.output(self.dirPin[i][0], GPIO.HIGH)
-				GPIO.output(self.dirPin[i][1], GPIO.LOW)
+	def determineDriver(self):
+		conf = open('config.txt', 'r')
+		microcontroller = ""
+		driver = ""
+		line = f.readline()
+		while line != "":
+			# if the first character is '#', this line is a comment
+			if line[0] != '#':
+				words = line.split()
+				# in both cases words[1] == '='
+				if words[0] == 'microcontroller':
+					microcontroller = words[2]
+				elif words[0] == 'driver':
+					driver = words[2]
+			line = f.readline()
+		if microcontroller == 'RPi':
+			if driver == 'L298'
+			try:
+				from drivers import RPiL298Driver
+			except ImportError as err:
+				print "Could not import drivers/RPiL298Driver"
+				sys.exit(1)
 			else:
-				GPIO.output(self.dirPin[i][0], GPIO.LOW)
-				GPIO.output(self.dirPin[i][1], GPIO.HIGH)
-
-	# set PWM duty cycle
-	def setDC(self):
-		for i in range(0 ,2):
-			self.setDirectionPins()
-		for i in range(0, 2):
-			if self.mPowers[i] == 0:
-				self.pwmObj[i].stop()
-				self.pwmStarted[i] = False
-			else:
-				if self.pwmStarted[i]:
-					self.pwmObj[i].ChangeDutyCycle(self.mPowers[i])
-				else:
-					self.pwmObj[i].start(self.mPowers[i])
-					self.pwmStarted[i] = True
+				self.driver = RPiL298Driver.RPiL298Driver()
 
 	# vel in m/s
 	def setDCByVel(self, vel):
@@ -121,16 +98,11 @@ class MotorController(Process):
 			self.mPowers[i] = 0
 		else:
 			 # experimenal, play with minDC, and minVel because maxVel was observerd at maxDC
-			self.mPowers[i] = util.transform(vel, util.minVel, util.maxVel, self.minDC, self.maxDC)
-		self.setDC()
+			self.mPowers[i] = util.transform(vel, util.minVel, util.maxVel, driver.minDC, driver.maxDC)
+		driver.setDC(self.mPowers,self.direction)
 
 	def exitGracefully(self):
-		for i in range(0, 2):
-			if self.pwmObj[i]:
-				self.pwmObj[i].ChangeDutyCycle(0)
-				self.pwmObj[i].stop()
-		GPIO.cleanup()
-		self.go = False
+		driver.exitGracefully()
 
 	def steeringThrottle(self, data):
 		steering = util.transform(data[1], 1000 , 2000, -1, 1)
@@ -214,25 +186,25 @@ class MotorController(Process):
 	def changeMotorVals(self, mL, mR):
 		if mL > 1500:
 			self.direction[self.LEFT] = 1
-			self.mPowers[self.LEFT] = util.clampToRange(util.transform(mL, 1500, 2000, 0, 100), self.minDC-1, self.maxDC)
+			self.mPowers[self.LEFT] = util.clampToRange(util.transform(mL, 1500, 2000, 0, 100), driver.minDC-1, driver.maxDC)
 		else:
 			self.direction[self.LEFT] = 0
-			self.mPowers[self.LEFT] = util.clampToRange(util.transform(mL, 1500, 1000, 0, 100), self.minDC-1, self.maxDC)
-		if self.mPowers[self.LEFT] < self.minDC:
+			self.mPowers[self.LEFT] = util.clampToRange(util.transform(mL, 1500, 1000, 0, 100), driver.minDC-1, driver.maxDC)
+		if self.mPowers[self.LEFT] < driver.minDC:
 			self.mPowers[self.LEFT] = 0
 
 		if mR > 1500:
 			self.direction[self.RIGHT] = 0
-			self.mPowers[self.RIGHT] = util.clampToRange(util.transform(mR, 1500, 2000, 0, 100), self.minDC-1, self.maxDC)
+			self.mPowers[self.RIGHT] = util.clampToRange(util.transform(mR, 1500, 2000, 0, 100), driver.minDC-1, driver.maxDC)
 		else :
 			self.direction[self.RIGHT] = 1
-			self.mPowers[self.RIGHT] = util.clampToRange(util.transform(mR, 1500, 1000, 0, 100), self.minDC-1, self.maxDC)
-		if self.mPowers[self.RIGHT] < self.minDC:
+			self.mPowers[self.RIGHT] = util.clampToRange(util.transform(mR, 1500, 1000, 0, 100), driver.minDC-1, driver.maxDC)
+		if self.mPowers[self.RIGHT] < driver.minDC:
 			self.mPowers[self.RIGHT] = 0
 		print self.mPowers
 
 		if self.state != self.VELOCITY_HEADING:
-			self.setDC()
+			driver.setDC(self.mPowers,self.direction)
 
 	def goToHeading(self, h):
 		if h > 2*math.pi:
@@ -251,7 +223,7 @@ class MotorController(Process):
 		dist = angDiff*util.botWidth/2
 		self.requiredCounts = round(dist/util.distPerBlip)
 		self.mPowers = [75, 75]
-		self.setDC()
+		driver.setDC(self.mPowers,self.direction)
 
 	# PID part of the wheel controller loop
 	def controlPowers(self, data):	#TODO possible use mm/sec instead of m/s because it will be more accurate because floating point is bad
@@ -261,16 +233,16 @@ class MotorController(Process):
 		pPWM = 0
 		if abs(p) >= util.minVel:
 			if p > 0:
-				pPWM = util.transform(vel, util.minVel, util.maxVel, self.minDC, self.maxDC)
+				pPWM = util.transform(vel, util.minVel, util.maxVel, driver.minDC, driver.maxDC)
 			else:
-				pPWM = -util.transform(vel, util.minVel, util.maxVel, self.minDC, self.maxDC)
+				pPWM = -util.transform(vel, util.minVel, util.maxVel, driver.minDC, driver.maxDC)
 		if(data[0] == util.leftEncPin):
 			self.mPowers[self.LEFT] += pPWM
 		elif(data[0] == util.rightEncPin):
 			self.mPowers[self.RIGHT] += pPWM
 		else:
 			print "Encoder is reading data to an unexpected pin"
-		self.setDC()
+		driver.setDC(self.mPowers,self.direction)
 
 	def handleEncoderQueue(self):	#TODO
 		while not self.encQueue.empty():	
