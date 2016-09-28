@@ -63,4 +63,5 @@ class RPiL298Driver: #TODO make this extend a driver class with abstract methods
 			if self.pwmObj[i]:
 				self.pwmObj[i].ChangeDutyCycle(0)
 				self.pwmObj[i].stop()
+				self.pwmStarted[i] = False
 		GPIO.cleanup()

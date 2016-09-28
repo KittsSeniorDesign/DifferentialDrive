@@ -78,6 +78,7 @@ class MotorController(Process):
 				elif words[0] == 'driver':
 					driver = words[2]
 			line = conf.readline()
+		conf.close()
 		if microcontroller == 'RPi':
 			if driver == 'L298':
 				try:
@@ -87,6 +88,15 @@ class MotorController(Process):
 					sys.exit(1)
 				else:
 					self.driver = RPiL298Driver.RPiL298Driver()
+		if microcontroller == 'Edison':
+			if driver == 'L298':
+				try:
+					import EdisonL298Driver
+				except ImportError as err:
+					print "Could not import drivers/EdisonL298Driver"
+					sys.exit(1)
+				else:
+					self.driver = EdisonL298Driver.EdisonL298Driver()
 
 	# vel in m/s
 	def setDCByVel(self, vel):
