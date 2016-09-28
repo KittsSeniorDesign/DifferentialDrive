@@ -2,7 +2,8 @@
 
 # This file was created by Ryan Cooper in 2016 for a Raspberry Pi
 # This class controls the motors for the robot which are configured as 
-# a differential drive
+# a differential drive, this code is written for a raspberry pi, 
+# TODO but should be reworked to load a driver that drives the motors
 import RPi.GPIO as GPIO
 import time
 import sys
@@ -15,12 +16,14 @@ from multiprocessing import Pipe
 import util
 
 class MotorController(Process):
+	# possible states
 	STEERING_THROTTLE_OFFBOARD = 1
 	STEERING_THROTTLE_ONBOARD = 2
 	TANK = 3
 	VELOCITY_HEADING = 4
 	state = STEERING_THROTTLE_OFFBOARD
 
+	# possible velocity heading states
 	TURNING = 0
 	DRIVING = 1
 	# velocity heading state
@@ -50,6 +53,7 @@ class MotorController(Process):
 	# used to shut the process down
 	pipe = None
 
+	# for vel/heading mode
 	desiredHeading = 0
 	desiredVel = 0
 	currentHeading = 0

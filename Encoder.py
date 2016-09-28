@@ -44,12 +44,14 @@ class Encoder(Process):
 
 	def getAveragePeriodBetweenBlips(self):
 		ave = 0.0
+		i = 0
 		for i in range(0, self.pSize):
-			if self.periods[i] == -1:
+			if self.periods[i] == -1: # invalid period, therefore return what is got
 				break
 			else:
 				ave += self.periods[i]
-		return ave/self.pSize
+		# return average of valid periods, i+1 because i will never equal self.pSize
+		return ave/(i+1)
 
 	def run(self):
 		self.go = True

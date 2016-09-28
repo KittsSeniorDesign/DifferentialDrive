@@ -47,21 +47,25 @@ class DDStarter:
 		signal.pause()
 
 	def makeClasses(self):
+		# used to create multi-process safe queues
 		manager = Manager()
+		# pipes for process termination
 		self.ePipeLeft, eLeft = Pipe() 
 		self.ePipeRight, eRight = Pipe()
 		self.motorPipe, m = Pipe() 
 		self.controllerPipe , c = Pipe()
+		# queues for interprocess communication
 		encQueue = manager.Queue()
 		controllerQueue = manager.Queue()
+		# passing arguments to processes
 		self.motorController = MotorController(encQueue=encQueue, controllerQueue=controllerQueue, pipe=m)
 		self.controlServer = DDMCServer(queue=controllerQueue, pipe=c)
 		self.Lencoder = Encoder(queue=encQueue, pin=util.leftEncPin, pipe=eLeft)
 		self.Rencoder = Encoder(queue=encQueue, pin=util.rightEncPin, pipe=eRight)
 
 	def startProcesses(self):
-		#self.Lencoder.start()
-		#self.Rencoder.start()
+		self.Lencoder.start()
+		self.Rencoder.start()
 		self.motorController.start()
 		self.controlServer.start()
 

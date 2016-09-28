@@ -16,10 +16,9 @@ from multiprocessing import Pipe
 class DDMCServer(Process):
 	serversocket = None 
 	clientsocket = None
-	motorController = None			# This should be set by RoboSunia.shareClasses()
 	# sends motor control signals to motor controller
 	driverQueue = None
-	# sused to shut the process down
+	# used to shut the process down
 	pipe = None
 	go = True
 
@@ -69,8 +68,8 @@ class DDMCServer(Process):
 			else:
 				self.driverQueue.put([
 					struct.unpack('i', data[0:4])[0], # control scheme
-					struct.unpack('i', data[4:8])[0], # left motor 
-					struct.unpack('i', data[8:12])[0]]) # right motor power
+					struct.unpack('i', data[4:8])[0], # left motor, steering, or velocity
+					struct.unpack('i', data[8:12])[0]]) # right motor, throttle, or heading
 		except Exception as msg:
 			if "Errno 104" in msg:
 				self.resetClient()
@@ -96,4 +95,3 @@ class DDMCServer(Process):
 		self.resetClient(False)
 		if self.serversocket:
 			self.serversocket.close()
-
