@@ -49,6 +49,7 @@ class MotorController(Process):
 	desiredHeading = 0
 	desiredVel = 0
 	currentHeading = 0
+	requiredCounts = 0
 
 	def __init__(self, *args, **kwargs):
 		super(MotorController, self).__init__()
@@ -59,13 +60,14 @@ class MotorController(Process):
 				self.pipe = kwargs[key]
 			elif key == 'controllerQueue':
 				self.controllerQueue = kwargs[key]
+		sys.path.append('drivers/')
 		self.determineDriver()
 
 	def determineDriver(self):
 		conf = open('config.txt', 'r')
 		microcontroller = ""
 		driver = ""
-		line = f.readline()
+		line = conf.readline()
 		while line != "":
 			# if the first character is '#', this line is a comment
 			if line[0] != '#':
@@ -75,16 +77,16 @@ class MotorController(Process):
 					microcontroller = words[2]
 				elif words[0] == 'driver':
 					driver = words[2]
-			line = f.readline()
+			line = conf.readline()
 		if microcontroller == 'RPi':
-			if driver == 'L298'
-			try:
-				from drivers import RPiL298Driver
-			except ImportError as err:
-				print "Could not import drivers/RPiL298Driver"
-				sys.exit(1)
-			else:
-				self.driver = RPiL298Driver.RPiL298Driver()
+			if driver == 'L298':
+				try:
+					import RPiL298Driver
+				except ImportError as err:
+					print "Could not import drivers/RPiL298Driver"
+					sys.exit(1)
+				else:
+					self.driver = RPiL298Driver.RPiL298Driver()
 
 	# vel in m/s
 	def setDCByVel(self, vel):
@@ -92,17 +94,18 @@ class MotorController(Process):
 			self.direction = [0, 0]
 		else:
 			self.direction = [1, 1]
-		if abs(vel) > util.maxVel:
-			self.mPowers[i] = maxDC
-		elif abs(vel) < util.minVel:
-			self.mPowers[i] = 0
-		else:
-			 # experimenal, play with minDC, and minVel because maxVel was observerd at maxDC
-			self.mPowers[i] = util.transform(vel, util.minVel, util.maxVel, driver.minDC, driver.maxDC)
-		driver.setDC(self.mPowers,self.direction)
+		for i in range(0, 2):
+			if abs(vel) > util.maxVel:
+				self.mPowers[i] = maxDC
+			elif abs(vel) < util.minVel:
+				self.mPowers[i] = 0
+			else:
+				 # experimenal, play with minDC, and minVel because maxVel was observerd at maxDC
+				self.mPowers[i] = util.transform(vel, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
+		self.driver.setDC(self.mPowers,self.direction)
 
 	def exitGracefully(self):
-		driver.exitGracefully()
+		self.driver.exitGracefully()
 
 	def steeringThrottle(self, data):
 		steering = util.transform(data[1], 1000 , 2000, -1, 1)
@@ -141,7 +144,7 @@ class MotorController(Process):
 	# and will change the motors powers and directions according to what was in the queue
 	# it also will monitor that the bot is still receiving commands, and if it isn't, it will stop the bot
 	def handleControllerQueue(self):
-		print self.state
+		#print self.state
 		# if there hasn't been anything in the queue in half a second
 		if time.time()-self.lastQueue > .5 and self.controllerQueue.empty():
 			# stop the bot
@@ -186,25 +189,25 @@ class MotorController(Process):
 	def changeMotorVals(self, mL, mR):
 		if mL > 1500:
 			self.direction[self.LEFT] = 1
-			self.mPowers[self.LEFT] = util.clampToRange(util.transform(mL, 1500, 2000, 0, 100), driver.minDC-1, driver.maxDC)
+			self.mPowers[self.LEFT] = util.clampToRange(util.transform(mL, 1500, 2000, 0, 100), self.driver.minDC-1, self.driver.maxDC)
 		else:
 			self.direction[self.LEFT] = 0
-			self.mPowers[self.LEFT] = util.clampToRange(util.transform(mL, 1500, 1000, 0, 100), driver.minDC-1, driver.maxDC)
-		if self.mPowers[self.LEFT] < driver.minDC:
+			self.mPowers[self.LEFT] = util.clampToRange(util.transform(mL, 1500, 1000, 0, 100), self.driver.minDC-1, self.driver.maxDC)
+		if self.mPowers[self.LEFT] < self.driver.minDC:
 			self.mPowers[self.LEFT] = 0
 
 		if mR > 1500:
 			self.direction[self.RIGHT] = 0
-			self.mPowers[self.RIGHT] = util.clampToRange(util.transform(mR, 1500, 2000, 0, 100), driver.minDC-1, driver.maxDC)
+			self.mPowers[self.RIGHT] = util.clampToRange(util.transform(mR, 1500, 2000, 0, 100), self.driver.minDC-1, self.driver.maxDC)
 		else :
 			self.direction[self.RIGHT] = 1
-			self.mPowers[self.RIGHT] = util.clampToRange(util.transform(mR, 1500, 1000, 0, 100), driver.minDC-1, driver.maxDC)
-		if self.mPowers[self.RIGHT] < driver.minDC:
+			self.mPowers[self.RIGHT] = util.clampToRange(util.transform(mR, 1500, 1000, 0, 100), self.driver.minDC-1, self.driver.maxDC)
+		if self.mPowers[self.RIGHT] < self.driver.minDC:
 			self.mPowers[self.RIGHT] = 0
-		print self.mPowers
+		#print self.mPowers
 
 		if self.state != self.VELOCITY_HEADING:
-			driver.setDC(self.mPowers,self.direction)
+			self.driver.setDC(self.mPowers,self.direction)
 
 	def goToHeading(self, h):
 		if h > 2*math.pi:
@@ -223,7 +226,7 @@ class MotorController(Process):
 		dist = angDiff*util.botWidth/2
 		self.requiredCounts = round(dist/util.distPerBlip)
 		self.mPowers = [75, 75]
-		driver.setDC(self.mPowers,self.direction)
+		self.driver.setDC(self.mPowers,self.direction)
 
 	# PID part of the wheel controller loop
 	def controlPowers(self, data):	#TODO possible use mm/sec instead of m/s because it will be more accurate because floating point is bad
@@ -233,16 +236,16 @@ class MotorController(Process):
 		pPWM = 0
 		if abs(p) >= util.minVel:
 			if p > 0:
-				pPWM = util.transform(vel, util.minVel, util.maxVel, driver.minDC, driver.maxDC)
+				pPWM = util.transform(aveVel, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
 			else:
-				pPWM = -util.transform(vel, util.minVel, util.maxVel, driver.minDC, driver.maxDC)
+				pPWM = -util.transform(aveVel, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
 		if(data[0] == util.leftEncPin):
 			self.mPowers[self.LEFT] += pPWM
 		elif(data[0] == util.rightEncPin):
 			self.mPowers[self.RIGHT] += pPWM
 		else:
 			print "Encoder is reading data to an unexpected pin"
-		driver.setDC(self.mPowers,self.direction)
+		self.driver.setDC(self.mPowers,self.direction)
 
 	def handleEncoderQueue(self):	#TODO
 		while not self.encQueue.empty():	
@@ -255,7 +258,7 @@ class MotorController(Process):
 				# realistically this should never happen because we check to see that the queue is not empty
 				# but it is shared memory, and who knows?
 				good = False
-			if good:
+			if good and self.state == self.VELOCITY_HEADING:
 				if self.vhState == self.TURNING:
 					# note, does not check which motor moved the desired amount, possible change this
 					if data[1] >= self.requiredCounts:
@@ -286,4 +289,5 @@ class MotorController(Process):
 				time.sleep(.01)
 			self.exitGracefully()
 		except Exception as msg:
+			print "Motor controller"
 			print msg
