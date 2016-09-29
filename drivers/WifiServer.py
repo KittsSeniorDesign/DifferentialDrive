@@ -74,7 +74,8 @@ class WifiServer(Process):
 					struct.unpack('i', data[4:8])[0], # left motor, steering, or velocity
 					struct.unpack('i', data[8:12])[0]]) # right motor, throttle, or heading
 		except Exception as msg:
-			self.resetClient()
+			if 'Errno 104' in msg:
+				self.resetClient()
 			
 	# check if the process should be stopped
 	def checkIfShouldStop(self):
@@ -91,7 +92,7 @@ class WifiServer(Process):
 			self.handleData()
 			self.checkIfShouldStop()
 			time.sleep(.01)
-	    self.closeConnections()
+		self.closeConnections()
 
 	def closeConnections(self):
 		self.resetClient(False)

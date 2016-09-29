@@ -94,6 +94,8 @@ class DDStarter:
 						commDriver = words[2]
 			line = conf.readline()
 		conf.close()
+		d = None
+		comm = None
 		if microcontroller == 'RPi':
 			if driver == 'L298':
 				try:
@@ -102,7 +104,7 @@ class DDStarter:
 					print "Could not import drivers/RPiL298Driver"
 					sys.exit(1)
 				else:
-					driver = RPiL298Driver.RPiL298Driver
+					d = RPiL298Driver.RPiL298Driver
 		elif microcontroller == 'Edison':
 			if driver == 'L298':
 				try:
@@ -111,7 +113,7 @@ class DDStarter:
 					print "Could not import drivers/EdisonL298Driver"
 					sys.exit(1)
 				else:
-					driver = EdisonL298Driver.EdisonL298Driver
+					d = EdisonL298Driver.EdisonL298Driver
 					
 		if commDriver == 'Wifi':
 			try:
@@ -120,9 +122,9 @@ class DDStarter:
 				print "Could not import drivers/WifiServer"
 				sys.exit(1)
 			else:
-				commDriver = WifiServer.WifiServer
+				comm = WifiServer.WifiServer
 		#elif commDriver == 'Xbee':
-		return (driver, commDriver)
+		return (d, comm)
 
 	def exitGracefully(self):
 		try:
