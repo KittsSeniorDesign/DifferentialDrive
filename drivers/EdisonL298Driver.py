@@ -21,7 +21,7 @@ class EdisionL298Driver:
 	def setupPins(self):
 		self.gpio = GPIO(debug=False)
 		for i in range(0, 2):
-			self.gpio.pinMode(self.pwmPin[i], self.gpio.OUTPUT)
+			#self.gpio.pinMode(self.pwmPin[i], self.gpio.OUTPUT)
 			for j in range(0, 2):
 				self.gpio.pinMode(self.dirPin[i][j], self.gpio.OUTPUT)
 

@@ -1,6 +1,14 @@
 # This file is used to tell the code what the system configuration is
 # The microcontroller, and the motor driver should be specified
-# see MotorController.determineDriver() for how to use comments
+# see DDStarter.determineDriver() for how to use comments and what keywords are used
+# remember to comment out the unused configuration lines
+
+# config for Raspberry pi using L298 and a USB wifi dongle
 microcontroller = RPi
 driver = L298
 commDevice = Wifi
+
+# config for Intel Edison using L298 and a Xbee
+#microcontroller = Edison
+#driver = L298
+#commDevice = Xbee

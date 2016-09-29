@@ -88,32 +88,38 @@ class MotorController(Process):
 		steering = util.transform(data[1], 1000 , 2000, -1, 1)
 		throttle = util.transform(data[2], 1000, 2000, -1, 1)
 		# used in steering to change motor velocities 
-		maxSm = 35
-		maxSp = 220
+		maxSp = 35
+		maxSm = 220
 		# max possible speed when moving forward
 		maxMove = 220
 		minMove = 0
-		sm = util.transform(abs(steering), 0, 1, 0, maxSm)
+		# sp is what will get added (plus) to t (which is the throttle value)
 		sp = util.transform(abs(steering), 0, 1, 0, maxSp)
+		# sm is what will get subtracted (minus) to t (which is the throttle value)
+		sm = util.transform(abs(steering), 0, 1, 0, maxSm)
 		t = util.transform(abs(throttle), 0, 1, minMove, maxMove)
 		L = t
 		R = t
 		end = 1500
 		if throttle < 0:
 			if steering < 0:
-				L += sm
-				R -= sp
+				# right motor should slow down, left motor should speed up
+				L += sp
+				R -= sm
 			else:
-				L -= sp
-				R += sm
+				# left motor should slow down, right motor should speed up
+				L -= sm
+				R += sp
 			end = 2000
 		else:
 			if steering < 0:
-				L -= sp
-				R += sm
+				# left motor should slow down, right motor should speed up
+				L -= sm
+				R += sp
 			else:
-				L += sm
-				R -= sp
+				# right motor should slow down, left motor should speed up
+				L += sp
+				R -= sm
 			end = 1000
 		mL = util.transform(util.clampToRange(L, 0, 255), 0, 255, 1500, end)
 		mR = util.transform(util.clampToRange(R, 0, 255), 0, 255, 1500, end)
@@ -227,7 +233,7 @@ class MotorController(Process):
 			print "Encoder is reading data to an unexpected pin"
 		self.driver.setDC(self.mPowers,self.direction)
 
-	def handleEncoderQueue(self):	#TODO
+	def handleEncoderQueue(self):	
 		while not self.encQueue.empty():	
 			good = True
 			try: 

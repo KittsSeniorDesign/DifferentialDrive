@@ -84,13 +84,14 @@ class DDStarter:
 			# if the first character is '#', this line is a comment
 			if line[0] != '#':
 				words = line.split()
-				# in both cases words[1] == '='
-				if words[0] == 'microcontroller':
-					microcontroller = words[2]
-				elif words[0] == 'driver':
-					driver = words[2]
-				elif words[0] == 'commDriver':
-					commDriver = words[2]
+				if len(words) > 0:
+					# in all cases words[1] == '='
+					if words[0] == 'microcontroller':
+						microcontroller = words[2]
+					elif words[0] == 'driver':
+						driver = words[2]
+					elif words[0] == 'commDriver':
+						commDriver = words[2]
 			line = conf.readline()
 		conf.close()
 		if microcontroller == 'RPi':
@@ -111,6 +112,7 @@ class DDStarter:
 					sys.exit(1)
 				else:
 					driver = EdisonL298Driver.EdisonL298Driver
+					
 		if commDriver == 'Wifi':
 			try:
 				import WifiServer
