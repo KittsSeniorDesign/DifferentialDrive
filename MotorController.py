@@ -15,6 +15,8 @@ from multiprocessing import Pipe
 
 import util
 
+#WARNING: calling print too frequently will cause high latency from control input to reaction
+
 class MotorController(Process):
 	# possible states
 	STEERING_THROTTLE_OFFBOARD = 1
@@ -85,8 +87,10 @@ class MotorController(Process):
 	def steeringThrottle(self, data):
 		steering = util.transform(data[1], 1000 , 2000, -1, 1)
 		throttle = util.transform(data[2], 1000, 2000, -1, 1)
+		# used in steering to change motor velocities 
 		maxSm = 35
 		maxSp = 220
+		# max possible speed when moving forward
 		maxMove = 220
 		minMove = 0
 		sm = util.transform(abs(steering), 0, 1, 0, maxSm)
@@ -154,7 +158,7 @@ class MotorController(Process):
 						self.desiredVel = data[1]
 						self.desiredHeading = data[2]
 						self.goToHeading(self.desiredHeading)
-				self.lastQueue = time.time()
+					self.lastQueue = time.time()
 
 	# this sets up the values used to drive the motors 
 	# it does not drive the motor because this function is tied to the queue
@@ -183,6 +187,7 @@ class MotorController(Process):
 
 		if self.state != self.VELOCITY_HEADING:
 			self.driver.setDC(self.mPowers,self.direction)
+		# VELOCITY_HEADING mode calls setDC from either goToHeading, or setDCbyVel
 
 	def goToHeading(self, h):
 		if h > 2*math.pi:

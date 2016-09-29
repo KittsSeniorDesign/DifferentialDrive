@@ -32,8 +32,10 @@ class WifiServer(Process):
 		self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		self.serversocket.bind(('', 12345))
+		# listen for only one connection
+
 		self.serversocket.listen(1)
-		print "DDMC server started"
+		print "Wifi server started"
 
 	def waitForConnection(self):
 		if self.clientsocket == None:
@@ -52,7 +54,8 @@ class WifiServer(Process):
 					time.sleep(1)
 
 	def resetClient(self, waitForReconnect = True):
-		print "DDMC controller disconnected!"
+		print "Controller disconnected!"
+		# Stop the bot
 		self.driverQueue.put([1,1500,1500])
 		if(self.clientsocket != None):
 			self.clientsocket.close()
@@ -65,16 +68,15 @@ class WifiServer(Process):
 			data = self.clientsocket.recv(12)
 			if len(data) == 0:
 				self.resetClient()
-			else:
+			else: # communicate with MotorController
 				self.driverQueue.put([
 					struct.unpack('i', data[0:4])[0], # control scheme
 					struct.unpack('i', data[4:8])[0], # left motor, steering, or velocity
 					struct.unpack('i', data[8:12])[0]]) # right motor, throttle, or heading
 		except Exception as msg:
-			if "Errno 104" in msg:
-				self.resetClient()
+			self.resetClient()
 			
-
+	# check if the process should be stopped
 	def checkIfShouldStop(self):
 		if self.pipe.poll():
 			data = self.pipe.recv()
@@ -89,7 +91,7 @@ class WifiServer(Process):
 			self.handleData()
 			self.checkIfShouldStop()
 			time.sleep(.01)
-	    	self.closeConnections()
+	    self.closeConnections()
 
 	def closeConnections(self):
 		self.resetClient(False)
