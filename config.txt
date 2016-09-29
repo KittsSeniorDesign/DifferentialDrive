@@ -3,3 +3,4 @@
 # see MotorController.determineDriver() for how to use comments
 microcontroller = RPi
 driver = L298
+commDevice = Wifi

@@ -13,7 +13,7 @@ from multiprocessing import Process
 from multiprocessing import Queue
 from multiprocessing import Pipe
 
-class DDMCServer(Process):
+class WifiServer(Process):
 	serversocket = None 
 	clientsocket = None
 	# sends motor control signals to motor controller
@@ -23,7 +23,7 @@ class DDMCServer(Process):
 	go = True
 
 	def __init__(self, *args, **kwargs):
-		super(DDMCServer, self).__init__()
+		super(WifiServer, self).__init__()
 		for key in kwargs:
 			if key == 'queue':
 				self.driverQueue = kwargs[key]

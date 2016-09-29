@@ -60,43 +60,8 @@ class MotorController(Process):
 				self.pipe = kwargs[key]
 			elif key == 'controllerQueue':
 				self.controllerQueue = kwargs[key]
-		sys.path.append('drivers/')
-		self.determineDriver()
-
-	def determineDriver(self):
-		conf = open('config.txt', 'r')
-		microcontroller = ""
-		driver = ""
-		line = conf.readline()
-		while line != "":
-			# if the first character is '#', this line is a comment
-			if line[0] != '#':
-				words = line.split()
-				# in both cases words[1] == '='
-				if words[0] == 'microcontroller':
-					microcontroller = words[2]
-				elif words[0] == 'driver':
-					driver = words[2]
-			line = conf.readline()
-		conf.close()
-		if microcontroller == 'RPi':
-			if driver == 'L298':
-				try:
-					import RPiL298Driver
-				except ImportError as err:
-					print "Could not import drivers/RPiL298Driver"
-					sys.exit(1)
-				else:
-					self.driver = RPiL298Driver.RPiL298Driver()
-		if microcontroller == 'Edison':
-			if driver == 'L298':
-				try:
-					import EdisonL298Driver
-				except ImportError as err:
-					print "Could not import drivers/EdisonL298Driver"
-					sys.exit(1)
-				else:
-					self.driver = EdisonL298Driver.EdisonL298Driver()
+			elif key == 'driver':
+				self.driver = kwargs[key]()
 
 	# vel in m/s
 	def setDCByVel(self, vel):
