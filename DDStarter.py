@@ -132,17 +132,17 @@ class DDStarter:
 			if self.motorController:
 				self.motorPipe.send('stop')	
 			if self.controlServer:
-				self.controlServer.send('stop')
-			if self.encoders[0]:
+				self.controllerPipe.send('stop')
+			if self.Lencoder:
 				self.ePipeLeft.send('stop')
-			if self.encoders[1]:
+			if self.Rencoder:
 				self.ePipeRight.send('stop')
 			sys.stdout.write("Waiting for threads to exit...")
 			sys.stdout.flush()
 			self.motorController.join()
 			self.controlServer.join()
-			self.Lencoders.join()
-			self.Rencoders.join()
+			self.Lencoder.join()
+			self.Rencoder.join()
 			print "Done"
 			sys.exit(0)
 		except Exception as msg:

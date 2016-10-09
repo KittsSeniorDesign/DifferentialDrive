@@ -67,6 +67,7 @@ class MotorController(Process):
 
 	# vel in m/s
 	def setDCByVel(self, vel):
+		print "setDCByVel"
 		if vel > 0:
 			self.direction = [0, 0]
 		else:
@@ -78,8 +79,11 @@ class MotorController(Process):
 				self.mPowers[i] = 0
 			else:
 				 # experimenal, play with minDC, and minVel because maxVel was observerd at maxDC
+				print vel
 				self.mPowers[i] = util.transform(vel, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
+		print self.mPowers
 		self.driver.setDC(self.mPowers,self.direction)
+		print "ne"
 
 	def exitGracefully(self):
 		self.driver.exitGracefully()
@@ -213,6 +217,7 @@ class MotorController(Process):
 		self.requiredCounts = round(dist/util.distPerBlip)
 		self.mPowers = [75, 75]
 		self.driver.setDC(self.mPowers,self.direction)
+		time.sleep(1000)
 
 	# PID part of the wheel controller loop
 	def controlPowers(self, data):	#TODO possible use mm/sec instead of m/s because it will be more accurate because floating point is bad
