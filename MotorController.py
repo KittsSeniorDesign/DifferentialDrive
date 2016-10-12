@@ -62,9 +62,7 @@ class MotorController(Process):
 			elif key == 'controllerQueue':
 				self.controllerQueue = kwargs[key]
 			elif key == 'driver':
-                                print "k"
 				self.driver = kwargs[key]()
-                                print "dirt?"
                 self.driver.setDC([0,0],[1,1])
 
 	# vel in m/s

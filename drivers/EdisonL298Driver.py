@@ -7,7 +7,7 @@ import time
 class EdisonL298Driver:
 	gpio = None
 	pwmPin = [5, 6]
-	dirPin = [[7,8], [10,9]] # TODO possible pull these from config.txt
+	dirPin = [[7, 8], [10, 9]] # TODO possible pull these from config.txt
 
 	pwmObj = [None, None]
 	# flag for motors pwmObj is started
@@ -20,7 +20,7 @@ class EdisonL298Driver:
 		self.initializePWM()
 
 	def setupPins(self):
-		self.gpio = GPIO(debug=True)
+		self.gpio = GPIO(debug=False)
 		for i in range(0, 2):
 			#self.gpio.pinMode(self.pwmPin[i], self.gpio.OUTPUT)
 			for j in range(0, 2):
@@ -36,18 +36,13 @@ class EdisonL298Driver:
 			self.pwmObj[i].enable(True)
 
 	def setDirectionPins(self, direction):
-                print direction
 		for i in range(0, 2):
 			if direction[i] == 1:
-                                print direction[i] 
 				self.gpio.digitalWrite(self.dirPin[i][0], self.gpio.HIGH)
 				self.gpio.digitalWrite(self.dirPin[i][1], self.gpio.LOW)
 			else:
-                                print direction[i] 
-                                print self.dirPin[i]
 				self.gpio.digitalWrite(self.dirPin[i][0], self.gpio.LOW)
 				self.gpio.digitalWrite(self.dirPin[i][1], self.gpio.HIGH)
-                                print "0que?"
 
 	# set PWM duty cycle
 	# 0 <= powers <= 100
