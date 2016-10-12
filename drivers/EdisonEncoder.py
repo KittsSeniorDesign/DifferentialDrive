@@ -7,7 +7,7 @@ class EdisonEncoder:
 	gpio = None
 
 	def __init__(self):
-		self.gpio = GPIO(debug=False)
+            pass # gpio should be set to the same gpio object as the one in EdisonL298Driver.py
 
 	def setupPin(self, pin):
 		self.pin = pin

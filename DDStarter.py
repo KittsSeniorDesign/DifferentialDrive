@@ -64,8 +64,10 @@ class DDStarter:
 		self.Lencoder = Encoder(queue=encQueue, pin=util.leftEncPin, pipe=eLeft, driver=encoderDriver)
 		self.Rencoder = Encoder(queue=encQueue, pin=util.rightEncPin, pipe=eRight, driver=encoderDriver)
 		if self.microcontroller == "Edison":
-			self.Lencoder.gpio = self.motorController.driver.gpio
-			self.Rencoder.gpio = self.motorController.driver.gpio
+			self.Lencoder.driver.gpio = self.motorController.driver.gpio
+			self.Rencoder.driver.gpio = self.motorController.driver.gpio
+                self.Lencoder.setupPin()
+                self.Rencoder.setupPin()
 
 	def startProcesses(self):
 		self.Lencoder.start()
@@ -101,7 +103,7 @@ class DDStarter:
 		d = None
 		comm = None
 		enc = None
-		if microcontroller == 'RPi':
+		if self.microcontroller == 'RPi':
 			if driver == 'L298':
 				try:
 					import RPiL298Driver
@@ -112,7 +114,7 @@ class DDStarter:
 				else:
 					d = RPiL298Driver.RPiL298Driver
 					enc = RPiEncoder.RPiEncoder
-		elif microcontroller == 'Edison':
+		elif self.microcontroller == 'Edison':
 			if driver == 'L298':
 				try:
 					import EdisonL298Driver

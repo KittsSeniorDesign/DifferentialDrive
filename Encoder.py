@@ -31,6 +31,8 @@ class Encoder(Process):
 				self.pin = kwargs[key]
                         elif key == 'driver':
 				self.driver = kwargs[key]()
+
+        def setupPin(self):
 		self.driver.setupPin(self.pin)
 
 	def checkIfShouldStop(self):
