@@ -1,5 +1,6 @@
 from wiringx86 import GPIOEdison as GPIO
 import mraa
+import time
 
 # Warning, untested
 class EdisonL298Driver:
@@ -78,3 +79,15 @@ class EdisonL298Driver:
 				self.pwmObj[i].enable(False)
 				self.pwmStarted[i] = False
 		self.gpio.cleanup()
+
+if __name__ == "__main__":
+	e = EdisonL298Driver()
+	for i in range(0, 2):
+		e.setDC([50, 50], [0,0])
+		time.sleep(1)
+		e.setDirectionPins([1,1])
+		time.sleep(1)
+		e.setDirection([0,0])
+		time.sleep(1)
+		e.setDC([0,0], [0,0])
+		time.sleep(1)
