@@ -33,6 +33,8 @@ class DDStarter:
 	ePipeRight = None
 	motorPipe = None
 	controllerPipe = None
+	# var that holds microcontroller info from config.txt
+	microcontroller = ""
 	
 	def __init__(self):
 		self.makeClasses()
@@ -61,7 +63,7 @@ class DDStarter:
 		self.controlServer = commDriver(queue=controllerQueue, pipe=c)
 		self.Lencoder = Encoder(queue=encQueue, pin=util.leftEncPin, pipe=eLeft, driver=encoderDriver)
 		self.Rencoder = Encoder(queue=encQueue, pin=util.rightEncPin, pipe=eRight, driver=encoderDriver)
-		if driver == EdisonL298Driver.EdisonL298Driver:
+		if self.microcontroller == "Edison":
 			self.Lencoder.gpio = self.motorController.driver.gpio
 			self.Rencoder.gpio = self.motorController.driver.gpio
 
@@ -77,7 +79,7 @@ class DDStarter:
 	def determineDrivers(self):
 		sys.path.append('drivers/')
 		# used to pull configuration from file
-		microcontroller = ""
+		self.microcontroller = ""
 		driver = ""
 		commDriver = ""
 		conf = open('config.txt', 'r')
@@ -89,7 +91,7 @@ class DDStarter:
 				if len(words) > 0:
 					# in all cases words[1] == '='
 					if words[0] == 'microcontroller':
-						microcontroller = words[2]
+						self.microcontroller = words[2]
 					elif words[0] == 'driver':
 						driver = words[2]
 					elif words[0] == 'commDriver':
