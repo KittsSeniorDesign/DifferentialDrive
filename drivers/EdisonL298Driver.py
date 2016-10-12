@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from wiringx86 import GPIOEdison as GPIO
 import mraa
 import time
@@ -31,7 +32,7 @@ class EdisonL298Driver:
 			self.setDirectionPins([0,0])
 		for i in range(0, 2):
 			self.pwmObj[i] = mraa.Pwm(self.pwmPin[i])
-			self.pwmObj[i].period(1/60)
+			self.pwmObj[i].period(1.0/60)
 			self.pwmObj[i].enable(False)
 			self.pwmStarted[i] = False
 
@@ -65,10 +66,10 @@ class EdisonL298Driver:
 			else:
 				if self.pwmStarted[i]:
 					# (1/60)*(power/100) to get duty cycle
-					self.pwmObj[i].pulsewidth(0.0166666666666667*(powers[i]/100))
+					self.pwmObj[i].pulsewidth(0.0166666666666667*(powers[i]/100.0))
 				else:
 					# (1/60)*(power/100) to get duty cycle
-					self.pwmObj[i].pulsewidth(0.0166666666666667*(powers[i]/100))
+					self.pwmObj[i].pulsewidth(0.0166666666666667*(powers[i]/100.0))
 					self.pwmObj[i].enable(True)
 					self.pwmStarted[i] = True			
 
@@ -87,7 +88,7 @@ if __name__ == "__main__":
 		time.sleep(1)
 		e.setDirectionPins([1,1])
 		time.sleep(1)
-		e.setDirection([0,0])
+		e.setDirectionPins([0,0])
 		time.sleep(1)
 		e.setDC([0,0], [0,0])
 		time.sleep(1)
