@@ -4,7 +4,6 @@
 # This class controls the motors for the robot which are configured as 
 # a differential drive, this code is written for a raspberry pi, 
 # TODO but should be reworked to load a driver that drives the motors
-import RPi.GPIO as GPIO
 import time
 import sys
 import math

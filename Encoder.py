@@ -1,4 +1,3 @@
-import RPi.GPIO as GPIO
 import time
 from multiprocessing import Process
 from multiprocessing import Pipe
@@ -12,6 +11,8 @@ class Encoder(Process):
 	count = 0
 	# will only put things into the queue
 	driverQueue = None
+	# object used to interface with GPIO of the microcontroller
+	driver = None
 	# used to shut the process down
 	pipe = None
 	go = True
@@ -28,8 +29,9 @@ class Encoder(Process):
 				self.pipe = kwargs[key]
 			elif key == 'pin':
 				self.pin = kwargs[key]
-		GPIO.setmode(GPIO.BOARD)
-		GPIO.setup(self.pin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+			elif key == 'driver'
+				self.driver = kwargs[key]()
+		self.driver.setupPin(self.pin)
 
 	def checkIfShouldStop(self):
 		if self.pipe.poll():
@@ -57,7 +59,7 @@ class Encoder(Process):
 		self.go = True
 		while self.go:
 			starttime = time.time()
-			val = GPIO.wait_for_edge(self.pin, GPIO.BOTH, timeout=100)
+			val = self.driver.waitForEdge()
 			if val is None:		#Stall occured
 				#TODO handle stall
 				self.count = 0
@@ -71,7 +73,7 @@ class Encoder(Process):
 					self.periodIndex += 1	
 			self.driverQueue.put([self.pin ,self.count, self.getAveragePeriodBetweenBlips()])
 			self.checkIfShouldStop()
-		GPIO.cleanup()
+		self.driver.exitGracefully()
 
 if __name__ == '__main__':
 	driver_queue = Queue()

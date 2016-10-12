@@ -4,7 +4,6 @@
 # to control a raspberry pi that is hooked up to motor controls
 # that control motors that create a differential drive
 # it can be controlled by keyboard or by an controlServer controller (possibly any HCI controller)
-import RPi.GPIO as GPIO
 import time
 import thread
 import signal
@@ -56,12 +55,12 @@ class DDStarter:
 		# queues for interprocess communication
 		encQueue = manager.Queue()
 		controllerQueue = manager.Queue()
-		(driver, commDriver) = self.determineDrivers()
+		(driver, commDriver, encoderDriver) = self.determineDrivers()
 		# passing arguments to processes
 		self.motorController = MotorController(encQueue=encQueue, controllerQueue=controllerQueue, pipe=m, driver=driver)
 		self.controlServer = commDriver(queue=controllerQueue, pipe=c)
-		self.Lencoder = Encoder(queue=encQueue, pin=util.leftEncPin, pipe=eLeft)
-		self.Rencoder = Encoder(queue=encQueue, pin=util.rightEncPin, pipe=eRight)
+		self.Lencoder = Encoder(queue=encQueue, pin=util.leftEncPin, pipe=eLeft, driver=encoderDriver)
+		self.Rencoder = Encoder(queue=encQueue, pin=util.rightEncPin, pipe=eRight, driver=encoderDriver)
 
 	def startProcesses(self):
 		self.Lencoder.start()
@@ -96,25 +95,29 @@ class DDStarter:
 		conf.close()
 		d = None
 		comm = None
+		enc = None
 		if microcontroller == 'RPi':
 			if driver == 'L298':
 				try:
 					import RPiL298Driver
+					import RPiEncoder
 				except ImportError as err:
-					print "Could not import drivers/RPiL298Driver"
+					print "Could not import drivers/RPiL298Driver, or drivers/RPiEncoder"
 					sys.exit(1)
 				else:
 					d = RPiL298Driver.RPiL298Driver
+					enc = RPiEncoder.RPiEncoder
 		elif microcontroller == 'Edison':
 			if driver == 'L298':
 				try:
 					import EdisonL298Driver
+					import EdisonEncoder
 				except ImportError as err:
 					print "Could not import drivers/EdisonL298Driver"
 					sys.exit(1)
 				else:
 					d = EdisonL298Driver.EdisonL298Driver
-					
+					enc = EdisonEncoder.EdisonEncoder
 		if commDriver == 'Wifi':
 			try:
 				import WifiServer
@@ -124,7 +127,7 @@ class DDStarter:
 			else:
 				comm = WifiServer.WifiServer
 		#elif commDriver == 'Xbee':
-		return (d, comm)
+		return (d, comm, enc)
 
 	def exitGracefully(self):
 		try:
