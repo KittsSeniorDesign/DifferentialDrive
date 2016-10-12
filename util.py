@@ -1,5 +1,4 @@
 # utility functions
-# warning, accessing these variables from multiple places may cause a race condition, I am unsure htough
 
 diameterOfWheel = 65.087 # mm
 circumferenceOfWheel = 204.476841044199 # mm  diameterofWheel*pi

@@ -57,10 +57,13 @@ class DDStarter:
 		controllerQueue = manager.Queue()
 		(driver, commDriver, encoderDriver) = self.determineDrivers()
 		# passing arguments to processes
+		self.motorController = MotorController(encQueue=encQueue, controllerQueue=controllerQueue, pipe=m, driver=driver)
 		self.controlServer = commDriver(queue=controllerQueue, pipe=c)
 		self.Lencoder = Encoder(queue=encQueue, pin=util.leftEncPin, pipe=eLeft, driver=encoderDriver)
 		self.Rencoder = Encoder(queue=encQueue, pin=util.rightEncPin, pipe=eRight, driver=encoderDriver)
-		self.motorController = MotorController(encQueue=encQueue, controllerQueue=controllerQueue, pipe=m, driver=driver)
+		if driver == EdisonL298Driver.EdisonL298Driver:
+			self.Lencoder.gpio = self.motorController.driver.gpio
+			self.Rencoder.gpio = self.motorController.driver.gpio
 
 	def startProcesses(self):
 		self.Lencoder.start()
