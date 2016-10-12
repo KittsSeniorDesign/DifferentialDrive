@@ -2,10 +2,10 @@ from wiringx86 import GPIOEdison as GPIO
 import mraa
 
 # Warning, untested
-class EdisionL298Driver:
+class EdisonL298Driver:
 	gpio = None
-	pwmPin = [38, 37]
-	dirPin = [[31,32], [35,33]] # TODO possible pull these from config.txt
+	pwmPin = [5, 6]
+	dirPin = [[7,8], [9,10]] # TODO possible pull these from config.txt
 
 	pwmObj = [None, None]
 	# flag for motors pwmObj is started
@@ -36,12 +36,19 @@ class EdisionL298Driver:
 
 	def setDirectionPins(self, direction):
 		for i in range(0, 2):
+                        print direction[i] 
 			if direction[i]:
+                                print "arg"
 				self.gpio.digitalWrite(self.dirPin[i][0], self.gpio.HIGH)
+                                print "dirt"
 				self.gpio.digitalWrite(self.dirPin[i][1], self.gpio.LOW)
+                                print "que?"
 			else:
+                                print "0arg"
 				self.gpio.digitalWrite(self.dirPin[i][0], self.gpio.LOW)
+                                print "0dirt"
 				self.gpio.digitalWrite(self.dirPin[i][1], self.gpio.HIGH)
+                                print "0que?"
 
 	# set PWM duty cycle
 	# 0 <= powers <= 100

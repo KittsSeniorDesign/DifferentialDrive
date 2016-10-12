@@ -29,7 +29,7 @@ class Encoder(Process):
 				self.pipe = kwargs[key]
 			elif key == 'pin':
 				self.pin = kwargs[key]
-			elif key == 'driver'
+                        elif key == 'driver':
 				self.driver = kwargs[key]()
 		self.driver.setupPin(self.pin)
 
