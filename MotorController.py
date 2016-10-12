@@ -62,7 +62,10 @@ class MotorController(Process):
 			elif key == 'controllerQueue':
 				self.controllerQueue = kwargs[key]
 			elif key == 'driver':
+                                print "k"
 				self.driver = kwargs[key]()
+                                print "dirt?"
+                self.driver.setDC([0,0],[1,1])
 
 	# vel in m/s
 	def setDCByVel(self, vel):
@@ -185,10 +188,10 @@ class MotorController(Process):
 			self.mPowers[self.LEFT] = 0
 
 		if mR > 1500:
-			self.direction[self.RIGHT] = 0
+			self.direction[self.RIGHT] = 1
 			self.mPowers[self.RIGHT] = util.clampToRange(util.transform(mR, 1500, 2000, 0, 100), self.driver.minDC-1, self.driver.maxDC)
 		else :
-			self.direction[self.RIGHT] = 1
+			self.direction[self.RIGHT] = 0
 			self.mPowers[self.RIGHT] = util.clampToRange(util.transform(mR, 1500, 1000, 0, 100), self.driver.minDC-1, self.driver.maxDC)
 		if self.mPowers[self.RIGHT] < self.driver.minDC:
 			self.mPowers[self.RIGHT] = 0

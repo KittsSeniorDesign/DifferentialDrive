@@ -4,7 +4,7 @@ class RPiL298Driver: #TODO make this extend a driver class with abstract methods
 
 	pwmPin = [38, 37]
 	# assuming you're using a L298n and a rpi
-	dirPin = [[31,32], [35,33]]
+	dirPin = [[31,32], [33,35]]
 
 	pwmObj = [None, None]
 	# flag for motors pwmObj is started
