@@ -4,11 +4,12 @@
 # remember to comment out the unused configuration lines
 
 # config for Raspberry pi using L298 and a USB wifi dongle
-microcontroller = RPi
-driver = L298
-commDriver = Wifi
+#microcontroller = RPi
+#driver = L298
+#commDriver = Wifi
 
 # config for Intel Edison using L298 and a Xbee
-#microcontroller = Edison
-#driver = L298
+microcontroller = Edison
+driver = L298
+commDriver = Wifi
 #commDriver = Xbee
