@@ -69,10 +69,8 @@ class Encoder(Process):
 			else:
 				self.count += 1
 				self.periods[self.periodIndex] = time.time()-starttime
-				if self.periodIndex+1 == self.pSize:
-					self.periodIndex = 0
-				else:
-					self.periodIndex += 1	
+		# increment self.periodIndex and keep it within range of self.pSize = len(self.periods)
+				self.periodIndex = (self.periodIndex+1)%self.pSize;
 			self.driverQueue.put([self.pin ,self.count, self.getAveragePeriodBetweenBlips()])
 			self.checkIfShouldStop()
 		self.driver.exitGracefully()

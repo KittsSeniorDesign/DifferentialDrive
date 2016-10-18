@@ -230,9 +230,9 @@ class MotorController(Process):
 			else:
 				pPWM = -util.transform(aveVel, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
 		if(data[0] == util.leftEncPin):
-			self.mPowers[self.LEFT] += pPWM
+			self.mPowers[self.LEFT] = util.clampToRange(self.mPowers[self.LEFT]+pPWM, 0, 100)
 		elif(data[0] == util.rightEncPin):
-			self.mPowers[self.RIGHT] += pPWM
+			self.mPowers[self.RIGHT] = util.clampToRange(self.mPowers[self.RIGHT]+pPWM, 0, 100)
 		else:
 			print "Encoder is reading data to an unexpected pin"
 		self.driver.setDC(self.mPowers,self.direction)
