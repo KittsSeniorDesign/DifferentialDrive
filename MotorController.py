@@ -67,23 +67,19 @@ class MotorController(Process):
 
 	# vel in m/s
 	def setDCByVel(self, vel):
-		print "setDCByVel"
 		if vel > 0:
 			self.direction = [0, 0]
 		else:
 			self.direction = [1, 1]
 		for i in range(0, 2):
 			if abs(vel) > util.maxVel:
-				self.mPowers[i] = maxDC
+				self.mPowers[i] = self.driver.maxDC
 			elif abs(vel) < util.minVel:
 				self.mPowers[i] = 0
 			else:
 				 # experimenal, play with minDC, and minVel because maxVel was observerd at maxDC
-				print vel
 				self.mPowers[i] = util.transform(vel, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
-		print self.mPowers
 		self.driver.setDC(self.mPowers,self.direction)
-		print "ne"
 
 	def exitGracefully(self):
 		self.driver.exitGracefully()
@@ -165,8 +161,10 @@ class MotorController(Process):
 					elif data[0] == self.VELOCITY_HEADING:
 						self.state = data[0]
 						self.vhState = self.TURNING
-						self.desiredVel = data[1]
-						self.desiredHeading = data[2]
+						self.desiredVel = float(data[1])
+						print float(data[1])
+						self.desiredHeading = float(data[2])
+						print float(data[2])
 						self.goToHeading(self.desiredHeading)
 					self.lastQueue = time.time()
 
@@ -207,34 +205,39 @@ class MotorController(Process):
 			# make h > -2pi
 			h = h+(2*math.pi*math.floor(h/(2*math.pi)))
 		angDiff = h-self.currentHeading
+		if abs(angDiff) < .01:
+			angDiff = 0
 		if angDiff > math.pi:
 			angDiff = abs(angDiff-2*math.pi)
 			self.direction = [1, 0]
 		else:
 			self.direction = [0, 1]
 		#	angle*radius=arclen
+		#print angDiff
 		dist = angDiff*util.botWidth/2
-		self.requiredCounts = round(dist/util.distPerBlip)
+		#print dist
 		self.mPowers = [75, 75]
 		self.driver.setDC(self.mPowers,self.direction)
 
 	# PID part of the wheel controller loop
 	def controlPowers(self, data):	#TODO possible use mm/sec instead of m/s because it will be more accurate because floating point is bad
-		aveVel = util.distPerBlip*data[2]
-		print aveVel
-		p = self.desiredVel-aveVel
-		pPWM = 0
-		if abs(p) >= util.minVel:
-			if p > 0:
-				pPWM = util.transform(aveVel, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
+		if self.desiredVel != 0:
+			aveVel = util.distPerBlip*data[2]
+			p = self.desiredVel-aveVel
+			pPWM = 0
+			if abs(p) >= util.minVel:
+				if p > 0:
+					pPWM = util.transform(aveVel, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
+				else:
+					pPWM = -util.transform(aveVel, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
+			if(data[0] == util.leftEncPin):
+				self.mPowers[self.LEFT] = util.clampToRange(self.mPowers[self.LEFT]+pPWM, 0, 100)
+			elif(data[0] == util.rightEncPin):
+				self.mPowers[self.RIGHT] = util.clampToRange(self.mPowers[self.RIGHT]+pPWM, 0, 100)
 			else:
-				pPWM = -util.transform(aveVel, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
-		if(data[0] == util.leftEncPin):
-			self.mPowers[self.LEFT] = util.clampToRange(self.mPowers[self.LEFT]+pPWM, 0, 100)
-		elif(data[0] == util.rightEncPin):
-			self.mPowers[self.RIGHT] = util.clampToRange(self.mPowers[self.RIGHT]+pPWM, 0, 100)
+				print "Encoder is reading data to an unexpected pin"
 		else:
-			print "Encoder is reading data to an unexpected pin"
+			self.mPowers = [0, 0]
 		self.driver.setDC(self.mPowers,self.direction)
 
 	def handleEncoderQueue(self):	
@@ -253,6 +256,7 @@ class MotorController(Process):
 					# note, does not check which motor moved the desired amount, possible change this
 					if data[1] >= self.requiredCounts:
 						self.vhState = self.DRIVING
+						self.currentHeading = self.desiredHeading
 						self.setDCByVel(self.desiredVel)
 				else:
 					# calls setDC()
