@@ -69,10 +69,19 @@ class WifiServer(Process):
 			if len(data) == 0:
 				self.resetClient()
 			else: # communicate with MotorController
-				self.driverQueue.put([
-					struct.unpack('i', data[0:4])[0], # control scheme
-					struct.unpack('i', data[4:8])[0], # left motor, steering, or velocity
-					struct.unpack('i', data[8:12])[0]]) # right motor, throttle, or heading
+				controlScheme = struct.unpack('i', data[0:4])[0]
+				if controlScheme != 4 # defined as VELOCITY_HEADING in MotorController.py
+					self.driverQueue.put([
+						controlScheme, # control scheme
+						struct.unpack('i', data[4:8])[0], # left motor, steering, or velocity
+						struct.unpack('i', data[8:12])[0]]) # right motor, throttle, or heading
+				else:
+					vel = round_total_digits(struct.unpack('<f', data[4:8])[0])
+					heading = round_total_digits(struct.unpack('<f', data[8:12])[0])
+					self.driverQueue.put([
+						controlScheme,
+						vel,
+						heading])
 		except Exception as msg:
 			if 'Errno 104' in msg:
 				self.resetClient()
