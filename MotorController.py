@@ -217,7 +217,6 @@ class MotorController(Process):
 		self.requiredCounts = round(dist/util.distPerBlip)
 		self.mPowers = [75, 75]
 		self.driver.setDC(self.mPowers,self.direction)
-		time.sleep(1000)
 
 	# PID part of the wheel controller loop
 	def controlPowers(self, data):	#TODO possible use mm/sec instead of m/s because it will be more accurate because floating point is bad
