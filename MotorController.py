@@ -216,6 +216,7 @@ class MotorController(Process):
 		sys.stdout.write("angDiff ")
 		print angDiff
 		dist = angDiff*util.botWidth/2
+		self.requiredCounts = dist/util.distPerBlip
 		self.mPowers = [75, 75]
 		self.driver.setDC(self.mPowers,self.direction)
 
