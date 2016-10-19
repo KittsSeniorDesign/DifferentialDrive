@@ -162,7 +162,6 @@ class MotorController(Process):
 						self.state = data[0]
 						self.vhState = self.TURNING
 						self.desiredVel = data[1]
-						print data[1]
 						self.desiredHeading = data[2]
 						self.goToHeading(self.desiredHeading)
 					self.lastQueue = time.time()
@@ -197,28 +196,27 @@ class MotorController(Process):
 		# VELOCITY_HEADING mode calls setDC from either goToHeading, or setDCbyVel
 
 	def goToHeading(self, h):
-		print h
-		if h > 2*math.pi:
-			# make h < 2pi
-			h = h-(2*math.pi*math.floor(h/(2*math.pi)))
-		elif h < -2*math.pi:
-			# make h > -2pi
-			h = h+(2*math.pi*math.floor(h/(2*math.pi)))
-		angDiff = h-self.currentHeading
-		if abs(angDiff) < .01:
-			angDiff = 0
-		if angDiff > math.pi:
-			angDiff = abs(angDiff-2*math.pi)
-			self.direction = [1, 0]
-		else:
-			self.direction = [0, 1]
-		#	angle*radius=arclen
-		sys.stdout.write("angDiff ")
-		print angDiff
-		dist = angDiff*util.botWidth/2
-		self.requiredCounts = dist/util.distPerBlip
-		self.mPowers = [75, 75]
-		self.driver.setDC(self.mPowers,self.direction)
+		if abs(self.currentHeading-h) > .01:
+			if h > 2*math.pi:
+				# make h < 2pi
+				h = h-(2*math.pi*math.floor(h/(2*math.pi)))
+			elif h < -2*math.pi:
+				# make h > -2pi
+				h = h+(2*math.pi*math.floor(h/(2*math.pi)))
+			angDiff = h-self.currentHeading
+			if angDiff > 0:
+				self.direction = [1, 0]
+			else:
+				self.direction = [0, 1]
+			#	angle*radius=arclen
+			sys.stdout.write("angDiff ")
+			sys.stdout.write(str(angDiff))
+			dist = angDiff*util.botWidth/2
+			self.requiredCounts = abs(dist/util.distPerBlip)
+			sys.stdout.write(" requiredCounts ")
+			print self.requiredCounts
+			self.mPowers = [75, 75]
+			self.driver.setDC(self.mPowers,self.direction)
 
 	# PID part of the wheel controller loop
 	def controlPowers(self, data):	#TODO possible use mm/sec instead of m/s because it will be more accurate because floating point is bad
