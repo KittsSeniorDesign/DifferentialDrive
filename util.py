@@ -24,23 +24,6 @@ def clampToRange(x, lower, upper):
 # maps x which is in the range of in_min to in_max to x's corresponding
 # value between out_min and out_max
 def transform(x, in_min, in_max, out_min, out_max):
-	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+	in_max = float(in_max)
+	return (x - in_min) * (out_max - out_min)/(in_max - in_min) + out_min
 
-# taken from stack overflow's Mark Ransom http://stackoverflow.com/questions/24682260/how-to-convert-4-byte-ieee-little-endian-float-binary-representation-to-float#24682634
-def magnitude(x):
-    return 0 if x==0 else int(math.floor(math.log10(abs(x)))) + 1
-
-def round_total_digits(x, digits=7):
-    return round(x, digits - magnitude(x))
-
-'''
->>> round_total_digits(struct.unpack('<f', '\x94\x53\xF0\x40')[0])
-7.510202
->>> round_total_digits(struct.unpack('<f', '\x0C\x02\x0F\x41')[0])
-8.938
->>> x = struct.unpack('<f', struct.pack('<f', 12345.67))[0]
->>> x
-12345.669921875
->>> round_total_digits(x)
-12345.67
-'''

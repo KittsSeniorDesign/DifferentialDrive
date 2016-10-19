@@ -85,7 +85,7 @@ class MotorController(Process):
 		self.driver.exitGracefully()
 
 	def steeringThrottle(self, data):
-		steering = util.transform(data[1], 1000 , 2000, -1, 1)
+		steering = util.transform(data[1], 1000, 2000, -1, 1)
 		throttle = util.transform(data[2], 1000, 2000, -1, 1)
 		# used in steering to change motor velocities 
 		maxSp = 35
@@ -131,7 +131,7 @@ class MotorController(Process):
 	def handleControllerQueue(self):
 		#print self.state
 		# if there hasn't been anything in the queue in half a second
-		if time.time()-self.lastQueue > .5 and self.controllerQueue.empty():
+		if self.state != self.VELOCITY_HEADING and time.time()-self.lastQueue > .5 and self.controllerQueue.empty():
 			# stop the bot
 			self.direction = [0, 0]
 			self.mPowers = [0, 0]
@@ -161,10 +161,9 @@ class MotorController(Process):
 					elif data[0] == self.VELOCITY_HEADING:
 						self.state = data[0]
 						self.vhState = self.TURNING
-						self.desiredVel = float(data[1])
-						print float(data[1])
-						self.desiredHeading = float(data[2])
-						print float(data[2])
+						self.desiredVel = data[1]
+						print data[1]
+						self.desiredHeading = data[2]
 						self.goToHeading(self.desiredHeading)
 					self.lastQueue = time.time()
 
@@ -198,6 +197,7 @@ class MotorController(Process):
 		# VELOCITY_HEADING mode calls setDC from either goToHeading, or setDCbyVel
 
 	def goToHeading(self, h):
+		print h
 		if h > 2*math.pi:
 			# make h < 2pi
 			h = h-(2*math.pi*math.floor(h/(2*math.pi)))
@@ -213,9 +213,9 @@ class MotorController(Process):
 		else:
 			self.direction = [0, 1]
 		#	angle*radius=arclen
-		#print angDiff
+		sys.stdout.write("angDiff ")
+		print angDiff
 		dist = angDiff*util.botWidth/2
-		#print dist
 		self.mPowers = [75, 75]
 		self.driver.setDC(self.mPowers,self.direction)
 
@@ -254,7 +254,9 @@ class MotorController(Process):
 			if good and self.state == self.VELOCITY_HEADING:
 				if self.vhState == self.TURNING:
 					# note, does not check which motor moved the desired amount, possible change this
+					print data
 					if data[1] >= self.requiredCounts:
+						print "dirt"
 						self.vhState = self.DRIVING
 						self.currentHeading = self.desiredHeading
 						self.setDCByVel(self.desiredVel)
