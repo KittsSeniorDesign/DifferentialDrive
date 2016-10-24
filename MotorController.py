@@ -222,10 +222,10 @@ class MotorController(Process):
 			sys.stdout.write("Moving by radians: ")
 			sys.stdout.write(str(h))
 			dist = h*util.botWidth/2.0
-			self.requiredCounts = abs(dist/util.distPerBlip)
+			self.requiredCounts = int(abs(dist/util.distPerBlip))
 			sys.stdout.write(" requiredCounts ")
 			print self.requiredCounts
-			self.mPowers = [75, 75]
+			self.mPowers = [60, 60]
 			self.driver.setDC(self.mPowers,self.direction)
 
 	def resetEncoders(self):
@@ -233,7 +233,7 @@ class MotorController(Process):
 			p.send('reset')
 
 	# PID part of the wheel controller loop
-	def controlPowers(self, vel):	#TODO possible use mm/sec instead of m/s because it will be more accurate because floating point is bad
+	def controlPowers(self, vel, pin):	#TODO possible use mm/sec instead of m/s because it will be more accurate because floating point is bad
 		if self.desiredVel != 0:
 			p = self.desiredVel-vel
 			pPWM = 0
@@ -242,9 +242,9 @@ class MotorController(Process):
 					pPWM = util.transform(p, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
 				else:
 					pPWM = -util.transform(p, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
-			if(data[0] == util.leftEncPin):
+			if(pin == util.leftEncPin):
 				self.mPowers[self.LEFT] = util.clampToRange(self.mPowers[self.LEFT]+pPWM, 0, 100)
-			elif(data[0] == util.rightEncPin):
+			elif(pin == util.rightEncPin):
 				self.mPowers[self.RIGHT] = util.clampToRange(self.mPowers[self.RIGHT]+pPWM, 0, 100)
 			else:
 				print "Encoder is reading data to an unexpected pin"
@@ -282,7 +282,7 @@ class MotorController(Process):
 						vel = util.circumferenceOfWheel*util.stateChangesPerRevolution/data[2]
 					# calls setDC()
 					# pid part of the loop
-					self.controlPowers(data[2])
+					self.controlPowers(vel, data[0])
 
 	# check to see if the process should stop
 	def checkIfShouldStop(self):
@@ -306,3 +306,5 @@ class MotorController(Process):
 		except Exception as msg:
 			print "Motor controller"
 			print msg
+			self.mPowers = [0, 0]
+			self.setDC(self.mPowers, [0, 0])
