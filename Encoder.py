@@ -35,17 +35,21 @@ class Encoder(Process):
         def setupPin(self):
 		self.driver.setupPin(self.pin)
 
-	def checkIfShouldStop(self):
+	def consumePipe(self):
 		if self.pipe.poll():
 			data = self.pipe.recv()
 			if 'stop' in data:
 				self.go = False
 				self.pipe.close()
+			elif 'reset' in data:
+				self.count = 0
+				self.resetPeriod()
 
 	def resetPeriod(self):
 		self.periods = [-1]*self.pSize
 		self.periodIndex = 0
 
+	# returns seconds/blip
 	def getAveragePeriodBetweenBlips(self):
 		ave = 0.0
 		i = 0
@@ -72,7 +76,7 @@ class Encoder(Process):
 		# increment self.periodIndex and keep it within range of self.pSize = len(self.periods)
 				self.periodIndex = (self.periodIndex+1)%self.pSize;
 			self.driverQueue.put([self.pin ,self.count, self.getAveragePeriodBetweenBlips()])
-			self.checkIfShouldStop()
+			self.consumePipe()
 		self.driver.exitGracefully()
 
 if __name__ == '__main__':

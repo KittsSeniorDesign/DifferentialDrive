@@ -2,7 +2,7 @@
 
 diameterOfWheel = 65.087 # mm
 circumferenceOfWheel = 204.476841044199 # mm  diameterofWheel*pi
-stateChangesPerRevolution = 40 # there are 20 slots, but 40 state changes
+stateChangesPerRevolution = 40.0 # there are 20 slots, but 40 state changes
 distPerBlip = 5.11192102610497 # mm  circumfrenceOfWheel/stateChangesPerRevolution
 maxVel = .51192102620497 # m/s  distPerBlip/getAverageBlip() when pwm = 100
 minVel = .01 # m/s just a guess //TODO make not a guess

@@ -45,9 +45,12 @@ class MotorController(Process):
 	controllerQueue = None
 	# used to shut the process down
 	pipe = None
+	#list used to reset the counts of the encoders
+	encPipes = None
 
 	# for vel/heading mode
 	desiredHeading = 0
+	# should be in mm/sec
 	desiredVel = 0
 	currentHeading = 0
 	requiredCounts = 0
@@ -57,6 +60,8 @@ class MotorController(Process):
 		for key in kwargs:
 			if key == 'encQueue':
 				self.encQueue = kwargs[key]
+			elif key == 'encPipes':
+				self.encPipes = kwargs[key]
 			elif key == 'pipe':
 				self.pipe = kwargs[key]
 			elif key == 'controllerQueue':
@@ -204,21 +209,31 @@ class MotorController(Process):
 				# make h > -2pi
 				h = h+(2*math.pi*math.floor(h/(2*math.pi)))
 			angDiff = h-self.currentHeading
-			if angDiff > 0:
+			self.changeHeadingByRadians(angDiff)
+
+	def changeHeadingByRadians(self, h):
+		if abs(h) > .01:
+			self.resetEncoders()
+			if h > 0:
 				self.direction = [1, 0]
 			else:
 				self.direction = [0, 1]
 			#	angle*radius=arclen
-			sys.stdout.write("angDiff ")
-			sys.stdout.write(str(angDiff))
-			dist = angDiff*util.botWidth/2
+			sys.stdout.write("Moving by radians: ")
+			sys.stdout.write(str(h))
+			dist = h*util.botWidth/2
 			self.requiredCounts = abs(dist/util.distPerBlip)
 			sys.stdout.write(" requiredCounts ")
 			print self.requiredCounts
 			self.mPowers = [75, 75]
 			self.driver.setDC(self.mPowers,self.direction)
 
+	def resetEncoders(self):
+		for p in self.encPipes:
+			p.send('reset')
+
 	# PID part of the wheel controller loop
+	# controls both wheels the same TODO make it so it does individual wheels
 	def controlPowers(self, data):	#TODO possible use mm/sec instead of m/s because it will be more accurate because floating point is bad
 		if self.desiredVel != 0:
 			aveVel = util.distPerBlip*data[2]
@@ -260,9 +275,14 @@ class MotorController(Process):
 						self.currentHeading = self.desiredHeading
 						self.setDCByVel(self.desiredVel)
 				else:
+					# data[2] = seconds/blip
+					# convert to rotations per second 
+					# then multiply by distance wheel travels in one rotation
+					# result is mm/second
+					vel = util.circumferenceOfWheel*util.stateChangesPerRevolution/data[2]
 					# calls setDC()
 					# pid part of the loop
-					self.controlPowers(data)
+					self.controlPowers(data[2])
 
 	# check to see if the process should stop
 	def checkIfShouldStop(self):
