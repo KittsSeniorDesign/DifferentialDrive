@@ -277,7 +277,9 @@ class MotorController(Process):
 					# convert to rotations per second 
 					# then multiply by distance wheel travels in one rotation
 					# result is mm/second
-					vel = util.circumferenceOfWheel*util.stateChangesPerRevolution/data[2]
+					vel = 0
+					if data[2] != 0:
+						vel = util.circumferenceOfWheel*util.stateChangesPerRevolution/data[2]
 					# calls setDC()
 					# pid part of the loop
 					self.controlPowers(data[2])
