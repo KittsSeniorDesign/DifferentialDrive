@@ -36,7 +36,7 @@ class Encoder(Process):
 		self.driver.setupPin(self.pin)
 
 	def consumePipe(self):
-		if self.pipe.poll():
+		while self.pipe.poll():
 			data = self.pipe.recv()
 			if 'stop' in data:
 				self.go = False

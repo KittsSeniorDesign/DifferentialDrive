@@ -233,17 +233,15 @@ class MotorController(Process):
 			p.send('reset')
 
 	# PID part of the wheel controller loop
-	# controls both wheels the same TODO make it so it does individual wheels
-	def controlPowers(self, data):	#TODO possible use mm/sec instead of m/s because it will be more accurate because floating point is bad
+	def controlPowers(self, vel):	#TODO possible use mm/sec instead of m/s because it will be more accurate because floating point is bad
 		if self.desiredVel != 0:
-			aveVel = util.distPerBlip*data[2]
-			p = self.desiredVel-aveVel
+			p = self.desiredVel-vel
 			pPWM = 0
 			if abs(p) >= util.minVel:
 				if p > 0:
-					pPWM = util.transform(aveVel, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
+					pPWM = util.transform(vel, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
 				else:
-					pPWM = -util.transform(aveVel, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
+					pPWM = -util.transform(vel, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
 			if(data[0] == util.leftEncPin):
 				self.mPowers[self.LEFT] = util.clampToRange(self.mPowers[self.LEFT]+pPWM, 0, 100)
 			elif(data[0] == util.rightEncPin):
