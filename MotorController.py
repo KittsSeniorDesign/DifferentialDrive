@@ -93,7 +93,7 @@ class MotorController(Process):
 		steering = util.transform(data[1], 1000, 2000, -1, 1)
 		throttle = util.transform(data[2], 1000, 2000, -1, 1)
 		# used in steering to change motor velocities 
-		maxSp = 35
+		maxSp = 35 
 		maxSm = 220
 		# max possible speed when moving forward
 		maxMove = 220

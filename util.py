@@ -7,7 +7,7 @@ distPerBlip = 5.11192102610497 # mm  circumfrenceOfWheel/stateChangesPerRevoluti
 maxVel = .51192102620497 # m/s  distPerBlip/getAverageBlip() when pwm = 100
 minVel = .01 # m/s just a guess //TODO make not a guess
 botWidth = 139.7 #mm distance from middle of tire to the other wheel's middle of its tire
-
+ 
 # this is different for both RPi and Edison
 # TODO, needs to be in encoder file or config.txt
 leftEncPin = 11

@@ -32,7 +32,7 @@ class Encoder(Process):
                         elif key == 'driver':
 				self.driver = kwargs[key]()
 
-        def setupPin(self):
+        def setupPin(self): 
 		self.driver.setupPin(self.pin)
 
 	def consumePipe(self):
