@@ -221,7 +221,7 @@ class MotorController(Process):
 			#	angle*radius=arclen
 			sys.stdout.write("Moving by radians: ")
 			sys.stdout.write(str(h))
-			dist = h*util.botWidth/2
+			dist = h*util.botWidth/2.0
 			self.requiredCounts = abs(dist/util.distPerBlip)
 			sys.stdout.write(" requiredCounts ")
 			print self.requiredCounts
@@ -239,9 +239,9 @@ class MotorController(Process):
 			pPWM = 0
 			if abs(p) >= util.minVel:
 				if p > 0:
-					pPWM = util.transform(vel, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
+					pPWM = util.transform(p, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
 				else:
-					pPWM = -util.transform(vel, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
+					pPWM = -util.transform(p, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
 			if(data[0] == util.leftEncPin):
 				self.mPowers[self.LEFT] = util.clampToRange(self.mPowers[self.LEFT]+pPWM, 0, 100)
 			elif(data[0] == util.rightEncPin):
