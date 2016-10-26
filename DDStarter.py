@@ -125,6 +125,8 @@ class DDStarter:
 				print err
 				print "Could not import EdisonGPIODriver"
 				sys.exit(1)
+			else:
+				gpio = EdisonGPIODriver.EdisonGPIODriver
 
 		if driver == 'L298':
 			try:

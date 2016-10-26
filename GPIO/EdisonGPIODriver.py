@@ -3,21 +3,21 @@
 from GPIOBaseClass import GPIOBaseClass
 from wiringx86 import GPIOEdison as GPIO
 import sys, os
+# so we can see util
+sys.path.append(os.path.abspath('..'))
+import util
 
 class EdisonGPIODriver(GPIOBaseClass):
 	_gpio = None
+	OUTPUT = GPIO.OUTPUT
+	INPUT = GPIO.INPUT
+	PWM = GPIO.PWM
+	ANALOG_INPUT = GPIO.ANALOG_INPUT
 
 
 	def __init__(self, commandQueue, responsePipes):
 		super(EdisonGPIODriver, self).__init__(commandQueue, responsePipes)
-		# so we can see util
-		sys.path.append(os.path.abspath('..'))
-		import util
 		self._gpio = GPIO(debug=False)
-		OUTPUT = self._gpio.OUTPUT
-		INPUT = self._gpio.INPUT
-		PWM = self._gpio.PWM
-		ANALOG_INPUT = self._gpio.ANALOG_INPUT
 
 	# args should be tuples, list, or a single int
 	def setup(self, pins, modes):
@@ -80,14 +80,14 @@ class EdisonGPIODriver(GPIOBaseClass):
 	def write(self, pins, levels):
 		if type(pins) is list or type(pins) is tuple:
 			for i in range(0, len(pins)):
-				val = self.LOW
+				val = GPIO.LOW
 				if levels[i]:
-					val = self.HIGH
+					val = GPIO.HIGH
 				self._gpio.digitalWrite(pins[i], val)
 		else: # must be an int
-			val = self.LOW
+			val = GPIO.LOW
 			if levels:
-				val = self.HIGH
+				val = GPIO.HIGH
 			self._gpio.digitalWrite(pins, levels)
 
 	# ait is assumed that the pin was setup to be a self._gpio.INPUT before this is called
@@ -102,13 +102,13 @@ class EdisonGPIODriver(GPIOBaseClass):
 		super(EdisonGPIODriver, self).exitGracefully()
 		self._gpio.cleanup()
 
-if __name__ = '__main__':
+if __name__ == '__main__':
 	from multiprocessing import Manager
 	from multiprocessing import Queue
 	import time
 	m = Manager
 	q = m.Queue()
-	e = EdisonGPIODriver(q, (,))
+	e = EdisonGPIODriver(q, ())
 	q.put(["setup", [7, 8], ["OUTPUT", "OUTPUT"]])
 	q.put(["setup", 5, "PWM"])
 	q.put(["setupPWM", 5, 60])
