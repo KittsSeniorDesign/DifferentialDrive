@@ -43,10 +43,10 @@ class RPiGPIODriver(GPIOBaseClass):
 			# create a pwmObj for every pin in pins that does not have one associated with it
 			for i in range(0, len(pins)):
 				if not pins[i] in self._pwmObjs:
-					self._pwmObjs[pins[i]] = (GPIO.PWM(pins[i], frequencies[i]), False)
+					self._pwmObjs[pins[i]] = [GPIO.PWM(pins[i], frequencies[i]), False]
 		else: # must be ints
 			if not pins in self._pwmObjs:
-				self._pwmObjs[pins] = (GPIO.PWM(pins, frequencies), False)
+				self._pwmObjs[pins] = [GPIO.PWM(pins, frequencies), False]
 
 	# args should be tuples, lists, or a single ints
 	def changeFrequency(self, pins, frequencies):
