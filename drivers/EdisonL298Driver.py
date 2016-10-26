@@ -49,8 +49,7 @@ class EdisonL298Driver:
 	# powers should be an array with 2 indexes [mLeftPower, mRightPower]
 	# direction should be an array with 2 indexes [mLeftDir, mRightDir]
 	def setDC(self, powers, direction):
-		for i in range(0 ,2):
-			self.setDirectionPins(direction)
+		self.setDirectionPins(direction)
 		for i in range(0, 2):
 			self.pwmObj[i].pulsewidth(0.0166666666666667*(powers[i]/100.0))
 
