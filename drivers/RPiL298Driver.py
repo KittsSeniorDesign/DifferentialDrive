@@ -1,6 +1,6 @@
 import RPi.GPIO as GPIO
 
-class RPiL298Driver: #TODO make this extend a driver class with abstract methods setDC() and setDirectionPins()
+class RPiL298Driver: #TODO make this extend a driver class with abstract methods setDC() and setDirection()
 
 	pwmPin = [38, 37]
 	# assuming you're using a L298n and a rpi
@@ -15,7 +15,7 @@ class RPiL298Driver: #TODO make this extend a driver class with abstract methods
 
 	def __init__(self):
 		self.setupPins()
-		self.initializePWM()
+		self.setupPWM()
 
 	def setupPins(self):
 		GPIO.setmode(GPIO.BOARD)
@@ -25,14 +25,14 @@ class RPiL298Driver: #TODO make this extend a driver class with abstract methods
 			for j in range(0, 2):
 				GPIO.setup(self.dirPin[i][j], GPIO.OUT)
 
-	def initializePWM(self):
+	def setupPWM(self):
 		for i in range(0 ,2):
-			self.setDirectionPins([0,0])
+			self.setDirection([0,0])
 		for i in range(0, 2):
 			self.pwmObj[i] = GPIO.PWM(self.pwmPin[i], self.freq)
 			self.pwmStarted[i] = False
 
-	def setDirectionPins(self, direction):
+	def setDirection(self, direction):
 		for i in range(0, 2):
 			if direction[i]:
 				GPIO.output(self.dirPin[i][0], GPIO.HIGH)
@@ -46,7 +46,7 @@ class RPiL298Driver: #TODO make this extend a driver class with abstract methods
 	# direction should be an array with 2 indexes [mLeftDir, mRightDir]
 	def setDC(self, powers, direction):
 		for i in range(0 ,2):
-			self.setDirectionPins(direction)
+			self.setDirection(direction)
 		for i in range(0, 2):
 			if powers[i] == 0:
 				self.pwmObj[i].stop()

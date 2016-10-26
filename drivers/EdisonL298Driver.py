@@ -17,7 +17,7 @@ class EdisonL298Driver:
 
 	def __init__(self):
 		self.setupPins()
-		self.initializePWM()
+		self.setupPWM()
 
 	def setupPins(self):
 		self.gpio = GPIO(debug=False)
@@ -26,16 +26,16 @@ class EdisonL298Driver:
 			for j in range(0, 2):
 				self.gpio.pinMode(self.dirPin[i][j], self.gpio.OUTPUT)
 
-	def initializePWM(self): 
+	def setupPWM(self): 
 		for i in range(0 ,2):
-			self.setDirectionPins([0,0])
+			self.setDirection([0,0])
 		for i in range(0, 2):
 			self.pwmObj[i] = mraa.Pwm(self.pwmPin[i])
 			self.pwmObj[i].period(1.0/60)
                         self.pwmObj[i].pulsewidth(0)
 			self.pwmObj[i].enable(True)
 
-	def setDirectionPins(self, direction):
+	def setDirection(self, direction):
 		for i in range(0, 2):
 			if direction[i] == 1:
 				self.gpio.digitalWrite(self.dirPin[i][0], self.gpio.HIGH)
@@ -50,7 +50,7 @@ class EdisonL298Driver:
 	# direction should be an array with 2 indexes [mLeftDir, mRightDir]
 	def setDC(self, powers, direction):
 		for i in range(0 ,2):
-			self.setDirectionPins(direction)
+			self.setDirection(direction)
 		for i in range(0, 2):
 			self.pwmObj[i].pulsewidth(0.0166666666666667*(powers[i]/100.0))
 
@@ -66,13 +66,13 @@ if __name__ == "__main__":
 	for i in range(0, 2):
 		e.setDC([50, 50], [0, 0])
 		time.sleep(1)
-		e.setDirectionPins([1, 1])
+		e.setDirection([1, 1])
 		time.sleep(1)
-		e.setDirectionPins([0, 1])
+		e.setDirection([0, 1])
 		time.sleep(1)
-		e.setDirectionPins([1, 0])
+		e.setDirection([1, 0])
 		time.sleep(1)
-		e.setDirectionPins([0, 0])
+		e.setDirection([0, 0])
 		time.sleep(1)
 		e.setDC([0, 0], [0, 0])
 		time.sleep(1)
