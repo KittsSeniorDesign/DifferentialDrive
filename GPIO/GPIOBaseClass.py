@@ -117,6 +117,7 @@ class GPIOBaseClass(Process):
 	# will inform processes that requested to wait for an edge
 	# with a list of the form (pin, level, time elapsed since request)
 	def checkForEdges(self):
+		keysToRemove = []
 		for key in self.cfeData:
 			elapsed = time.time()-self.cfeData[key][2]
 			if elapsed > self.cfeData[key][3]:
@@ -126,7 +127,9 @@ class GPIOBaseClass(Process):
 				# if originalReading != currentReading
 				if self.cfeData[key][1] != currentReading:
 					self.responsePipes[key].send((self.cfeData[key][0], str(currentReading), time.time()-self.cfeData[key][2]))
-					del self.cfeData[key]
+					keysToRemove.append(key)
+		for key in keysToRemove:
+			del self.cfeData[key]
 
 	def run(self):
 		a = None
