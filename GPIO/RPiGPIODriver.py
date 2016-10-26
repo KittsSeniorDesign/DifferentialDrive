@@ -87,8 +87,6 @@ class RPiGPIODriver(GPIOBaseClass):
 		else: # must be ints
 			if pins in self._pwmObjs:
 				if values == 0:
-					print type(self._pwmObjs[pins][1])
-					print type(pins)
 					self._pwmObjs[pins][0].stop()
 					self._pwmObjs[pins][1] = False
 				# if values is valid

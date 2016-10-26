@@ -108,25 +108,25 @@ class GPIOBaseClass(Process):
 					# a[1] = uniqueProcessIdentifier
 					# a[2] = pin to wait for an edge
 					# a[3] = timeout to wait in seconds
-					self.cfeData[a[1]] = (a[2], _read(a[2]), time.time(), a[3])
+					self.cfeData[a[1]] = (a[2], self._read(a[2]), time.time(), a[3])
 				elif a[0] == 'analogRead':
 					# a[1] = uniqueProcessIdentifier
 					# a[2] = pin to read
-					responsePipes[a[1]].send(_analogRead(a[2]))
+					self.responsePipes[a[1]].send(self._analogRead(a[2]))
 
 	# will inform processes that requested to wait for an edge
 	# with a list of the form (pin, level, time elapsed since request)
 	def checkForEdges(self):
-		for key in cfeData:
-			elapsed = time.time()-cfeData[key][2]
-			if elapsed > cfeData[key][3]:
-				responsePipes[key].send((cfeData[key][0], None, elapsed))
+		for key in self.cfeData:
+			elapsed = time.time()-self.cfeData[key][2]
+			if elapsed > self.cfeData[key][3]:
+				self.responsePipes[key].send((self.cfeData[key][0], None, elapsed))
 			else:
-				currentReading = _read(cfeData[key][0])
+				currentReading = self._read(self.cfeData[key][0])
 				# if originalReading != currentReading
-				if cfeData[key][1] != currentReading:
-					responsePipes[key].send((cfeData[key][0], str(currentReading), time.time()-cfeData[key][2]))
-					del cfeData[key]
+				if self.cfeData[key][1] != currentReading:
+					self.responsePipes[key].send((self.cfeData[key][0], str(currentReading), time.time()-self.cfeData[key][2]))
+					del self.cfeData[key]
 
 	def run(self):
 		a = None
