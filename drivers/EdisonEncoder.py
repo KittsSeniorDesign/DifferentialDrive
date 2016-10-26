@@ -3,7 +3,7 @@ import time
 
 class EdisonEncoder:
 	pin = None
-	timeout = 100
+	timeout = .1
 	gpio = None
 
 	def __init__(self):
