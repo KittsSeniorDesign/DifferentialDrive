@@ -122,6 +122,7 @@ class GPIOBaseClass(Process):
 			elapsed = time.time()-self.cfeData[key][2]
 			if elapsed > self.cfeData[key][3]:
 				self.responsePipes[key].send((self.cfeData[key][0], None, elapsed))
+				keysToRemove.append(key)
 			else:
 				currentReading = self._read(self.cfeData[key][0])
 				# if originalReading != currentReading
