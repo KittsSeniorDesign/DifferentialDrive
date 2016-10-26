@@ -45,8 +45,7 @@ class RPiL298Driver: #TODO make this extend a driver class with abstract methods
 	# powers should be an array with 2 indexes [mLeftPower, mRightPower]
 	# direction should be an array with 2 indexes [mLeftDir, mRightDir]
 	def setDC(self, powers, direction):
-		for i in range(0 ,2):
-			self.setDirectionPins(direction)
+		self.setDirectionPins(direction)
 		for i in range(0, 2):
 			if powers[i] == 0:
 				self.pwmObj[i].stop()
