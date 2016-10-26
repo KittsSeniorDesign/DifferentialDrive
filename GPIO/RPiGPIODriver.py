@@ -5,8 +5,6 @@ import RPi.GPIO as GPIO
 
 # remember this is a Process
 class RPiGPIODriver(GPIOBaseClass):
-	HIGH = GPIO.HIGH
-	LOW = GPIO.LOW
 	OUTPUT = GPIO.OUT
 	INPUT = GPIO.IN
 	PWM = GPIO.OUT
@@ -24,10 +22,12 @@ class RPiGPIODriver(GPIOBaseClass):
 	# args should be tuples
 	def setup(self, pins, modes):
 		for i in range(0, len(pins)):
-			if modes[i] == GPIO.IN:
-				GPIO.setup(pins[i], modes[i], pull_up_down=GPIO.PUD_DOWN)
-			else:
-				GPIO.setup(pins[i], modes[i])
+			if modes[i] == 'INPUT':
+				GPIO.setup(pins[i], self.INPUT, pull_up_down=GPIO.PUD_DOWN)
+			elif modes[i] == 'OUTPUT':
+				GPIO.setup(pins[i], self.OUTPUT)
+			elif modes[i] == 'ANALOG_INPUT':
+				GPIO.setup(pins[i], self.ANALOG_INPUT)
 
 	# args should be tuples
 	def setupPWM(self, pins, frequencies):

@@ -32,15 +32,13 @@ class MotorController(Process):
 
 	LEFT = 0
 	RIGHT = 1
-	# the class that will control the motors depending on what platform this code is running on
-	driver = None
 
 	mPowers = [0, 0]
 	direction = [0, 0]	# forward or backward
 	# set by time.time(), used to stop bot when dced
 	lastQueue = 0
 	go = True
-	# only consumes the queue
+	# only consumes these queue
 	encQueue = None
 	controllerQueue = None
 	# used to shut the process down
@@ -66,9 +64,12 @@ class MotorController(Process):
 				self.pipe = kwargs[key]
 			elif key == 'controllerQueue':
 				self.controllerQueue = kwargs[key]
-			elif key == 'driver':
-				self.driver = kwargs[key]()
-                self.driver.setDC([0,0],[1,1])
+			elif key == 'motorDriver':
+				d = kwargs[key]
+            elif key == 'gpioQueue'
+            	gpioQueue = kwargs[key]
+            self.driver = d(gpioQueue)
+            self.driver.setDC([0,0],[0,0])
 
 	# vel in m/s
 	def setDCByVel(self, vel):
@@ -87,7 +88,7 @@ class MotorController(Process):
 		self.driver.setDC(self.mPowers,self.direction)
 
 	def exitGracefully(self):
-		self.driver.exitGracefully()
+		go = False
 
 	def steeringThrottle(self, data):
 		steering = util.transform(data[1], 1000, 2000, -1, 1)

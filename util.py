@@ -13,6 +13,12 @@ botWidth = 139.7 #mm distance from middle of tire to the other wheel's middle of
 leftEncPin = 11
 rightEncPin = 12
 
+microcontroller = None
+
+# returns a unique identifier for a process
+def getIdentifier(process):
+	return str(process).split('(')[1].split(',')[0]
+
 def clampToRange(x, lower, upper):
 		if x < lower:
 			return lower

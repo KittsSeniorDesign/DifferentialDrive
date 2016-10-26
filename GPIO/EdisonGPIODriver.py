@@ -14,8 +14,6 @@ class EdisonGPIODriver(GPIOBaseClass):
 		sys.path.append(os.path.abspath('..'))
 		import util
 		self._gpio = GPIO(debug=False)
-		HIGH = self._gpio.HIGH
-		LOW = self._gpio.LOW
 		OUTPUT = self._gpio.OUT
 		INPUT = self._gpio.IN
 		PWM = self._gpio.PWM
@@ -24,7 +22,12 @@ class EdisonGPIODriver(GPIOBaseClass):
 	# args should be tuples
 	def setup(self, pins, modes):
 		for i in range(0, len(pins)):
-			self._gpio.pinMode(pins[i], modes[i])
+			if modes[i] == 'INPUT':
+				self._gpio.pinMode(pins[i], self.INPUT)
+			elif modes[i] == 'OUTPUT':
+				self._gpio.pineMode(pins[i], self.OUTPUT)
+			elif modes[i] == 'ANALOG_INPUT':
+				self._gpio.pinMode(pins[i], self.ANALOG_INPUT)
 
 	# args should be tuples
 	def setupPWM(self, pins, frequencies):

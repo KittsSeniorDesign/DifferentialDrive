@@ -11,14 +11,14 @@ class Encoder(Process):
 	count = 0
 	# will only put things into the queue
 	driverQueue = None
-	# object used to interface with GPIO of the microcontroller
-	driver = None
+	gpioQueue = None
 	# used to shut the process down
 	pipe = None
 	go = True
 	pSize = 10
 	periods = [-1.0]*pSize
 	periodIndex = 0
+	timeout = .1 # seconds
 
 	def __init__(self, *args, **kwargs):
 		super(Encoder, self).__init__()
@@ -29,21 +29,39 @@ class Encoder(Process):
 				self.pipe = kwargs[key]
 			elif key == 'pin':
 				self.pin = kwargs[key]
-                        elif key == 'driver':
-				self.driver = kwargs[key]()
+			elif key == 'gpioQueue':
+				self.gpioQueue = kwargs[key]
 
-        def setupPin(self): 
-		self.driver.setupPin(self.pin)
+    def setupPin(self): 
+		self.gpioQueue.put(['setup', self.pin, 'INPUT'])
 
 	def consumePipe(self):
 		while self.pipe.poll():
 			data = self.pipe.recv()
-			if 'stop' in data:
+			if 'stop' == data:
 				self.go = False
 				self.pipe.close()
-			elif 'reset' in data:
+			elif 'reset' == data:
 				self.count = 0
 				self.resetPeriod()
+			elif len(data) == 3:
+				# data[1] = level of pin
+				# data[2] = time since request
+				self.waitForEdgeResponse(data[1], data[2])
+				self.gpioQueue.put(['waitForEdge', util.getIdentifier(self), self.pin, self.timeout])
+
+	# if level = None a stall occured
+	def waitForEdgeResponse(self, level, elapsedTime):
+		if level = None: #Stall occured
+			#TODO handle stall
+			self.count = 0
+			self.resetPeriod()
+		else:
+			self.count += 1
+			self.periods[self.periodIndex] = elapsedTime
+	# increment self.periodIndex and keep it within range of self.pSize = len(self.periods)
+			self.periodIndex = (self.periodIndex+1)%self.pSize;
+		self.driverQueue.put([self.pin ,self.count, self.getAveragePeriodBetweenBlips()])
 
 	def resetPeriod(self):
 		self.periods = [-1]*self.pSize
@@ -61,37 +79,9 @@ class Encoder(Process):
 		# return average of valid periods, i+1 because i will never equal self.pSize
 		return ave/(i+1)
 
+	# TODO wait for edge
 	def run(self):
 		self.go = True
+		self.gpioQueue.put(['waitForEdge', util.getIdentifier(self), self.pin, self.timeout])
 		while self.go:
-			starttime = time.time()
-			val = self.driver.waitForEdge()
-			if val is None:		#Stall occured
-				#TODO handle stall
-				self.count = 0
-				self.resetPeriod()
-			else:
-				self.count += 1
-				self.periods[self.periodIndex] = time.time()-starttime
-		# increment self.periodIndex and keep it within range of self.pSize = len(self.periods)
-				self.periodIndex = (self.periodIndex+1)%self.pSize;
-			self.driverQueue.put([self.pin ,self.count, self.getAveragePeriodBetweenBlips()])
 			self.consumePipe()
-		self.driver.exitGracefully()
-
-if __name__ == '__main__':
-	driver_queue = Queue()
-	control_pipe, enc_pipe = Pipe()
-	e = Encoder(queue=driver_queue, pipe=enc_pipe, pin=11)
-	e.start()
-	while True:
-		while not driver_queue.empty():
-			good = True
-			try: 
-				data = driver_queue.get()
-			except Queue.Empty as msg:
-				# realistically this should never happen because we check to see that the queue is not empty
-				# but it is shared memory, and who knows?
-				good = False
-			if good:
-				print data

@@ -6,8 +6,6 @@ import time
 
 class GPIOBaseClass(Process):
 	
-	HIGH = "Override in inherited class"
-	LOW = "Override in inherited class"
 	OUTPUT = "Override in inherited class"
 	INPUT = "Override in inherited class"
 	PWM = "Override in inherited class"
@@ -16,10 +14,10 @@ class GPIOBaseClass(Process):
 	# set in __init__
 	# used to change pin or pwm values, or to request a input or analog read
 	commandQueue = None
-	# dictionary of the form {pid: responsePipe, ...} where responsePipe is a connection object
+	# dictionary of the form {uniqueProcessIdentifier: responsePipe, ...} where responsePipe is a connection object
 	responsePipes = None
 	# stores which processes are waiting for an edge on which pin (cfe=checkForEdge)
-	# of the form {pid: (pin, originalReading, timeOfInitialReading), ...}
+	# of the form {uniqueProcessIdentifier: (pin, originalReading, timeOfInitialReading), ...}
 	cfeData = {}
 
 	# childs init should call the super constructor 
@@ -81,48 +79,54 @@ class GPIOBaseClass(Process):
 		self.commandQueue = None
 
 	def consumeQueue(self):
-		a = self.commandQueue.get_nowait():
-		if a:
-			if a[0] == 'setup':
-				# a[1] is pins
-				# a[2] is modes
-				self.setup(a[1], a[2])
-			elif a[0] == 'setupPWM':
-				# a[1] is pins
-				# a[2] is frequencies
-				self.setupPWM(a[1], a[2])
-			elif a[0] == 'changeFrequency':
-				# a[1] is pins
-				# a[2] is frequencies
-				self.changeFrequency(a[1], a[2])
-			elif a[0] == 'setDC':
-				# a[1] is pins
-				# a[2] is values
-				self.setDC(a[1], a[2])
-			elif a[0] == 'write':
-				# a[1] is pins
-				# a[2] is levels
-				self.write(a[1], a[2])
-			elif a[0] == 'exitGracefully':
-				self.exitGracefuly()
-			elif a[0] == 'waitForEdge':
-				# a[1] = PID
-				# a[2] = pin to wait for an edge
-				self.cfeData[a[1]] = (a[2], _read(a[2]), time.time())
-			elif a[0] == 'analogRead':
-				# a[1] = PID
-				# a[2] = pin to read
-				responsePipes[a[1]].send(_analogRead(a[2]))
+		while not self.commandQueue.empty():
+			a = self.commandQueue.get_nowait():
+			if a:
+				if a[0] == 'setup':
+					# a[1] is pins
+					# a[2] is modes
+					self.setup(a[1], a[2])
+				elif a[0] == 'setupPWM':
+					# a[1] is pins
+					# a[2] is frequencies
+					self.setupPWM(a[1], a[2])
+				elif a[0] == 'changeFrequency':
+					# a[1] is pins
+					# a[2] is frequencies
+					self.changeFrequency(a[1], a[2])
+				elif a[0] == 'setDC':
+					# a[1] is pins
+					# a[2] is values
+					self.setDC(a[1], a[2])
+				elif a[0] == 'write':
+					# a[1] is pins
+					# a[2] is levels
+					self.write(a[1], a[2])
+				elif a[0] == 'exitGracefully':
+					self.exitGracefuly()
+				elif a[0] == 'waitForEdge':
+					# a[1] = uniqueProcessIdentifier
+					# a[2] = pin to wait for an edge
+					# a[3] = timeout to wait in seconds
+					self.cfeData[a[1]] = (a[2], _read(a[2]), time.time(), a[3])
+				elif a[0] == 'analogRead':
+					# a[1] = uniqueProcessIdentifier
+					# a[2] = pin to read
+					responsePipes[a[1]].send(_analogRead(a[2]))
 
 	# will inform processes that requested to wait for an edge
-	# with a list of the form (pin, level, timeElapsed since request)
+	# with a list of the form (pin, level, time elapsed since request)
 	def checkForEdges(self):
 		for key in cfeData:
-			currentReading = _read(cfeData[key][0])
-			# if originalReading != currentReading
-			if cfeData[key][1] != currentReading:
-				responsePipes[key].send((cfeData[key][0], str(currentReading), time.time()-cfeData[key][2]))
-				del cfeData[key]
+			elapsed = time.time()-cfeData[key][2]
+			if elapsed > cfeData[key][3]:
+				responsePipes[key].send((cfeData[key][0], None, elapsed))
+			else:
+				currentReading = _read(cfeData[key][0])
+				# if originalReading != currentReading
+				if cfeData[key][1] != currentReading:
+					responsePipes[key].send((cfeData[key][0], str(currentReading), time.time()-cfeData[key][2]))
+					del cfeData[key]
 
 	def run(self):
 		a = None

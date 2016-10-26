@@ -26,6 +26,7 @@ class DDStarter:
 	motorController = None
 	# Differential Drive Motor Controller (DDMC)
 	controlServer = None
+	gpioProcess = None
 	Lencoder = None
 	Rencoder = None
 	# pipes are used to terminate processes
@@ -57,19 +58,20 @@ class DDStarter:
 		# queues for interprocess communication
 		encQueue = manager.Queue()
 		controllerQueue = manager.Queue()
-		(driver, commDriver, encoderDriver) = self.determineDrivers()
+		gpioQueue = manager.Queue()
+		(motorDriver, commDriver, encoderDriver, gpioDriver) = self.determineDrivers()
 		# passing arguments to processes
-		self.motorController = MotorController(encQueue=encQueue, encPipes=(self.ePipeLeft, self.ePipeRight), controllerQueue=controllerQueue, pipe=m, driver=driver)
+		self.Lencoder = Encoder(queue=encQueue, pin=util.leftEncPin, pipe=eLeft, gpioQueue=gpioQueue)
+		self.Rencoder = Encoder(queue=encQueue, pin=util.rightEncPin, pipe=eRight, gpioQueue=gpioQueue)
+		self.gpioProcess = gpioDriver(gpioQueue, {util.getIdentifier(self.Lencoder): self.ePipeLeft, util.getIdentifier(self.Rencoder): self.ePipeRight})
+		self.motorController = MotorController(encQueue=encQueue, encPipes=(self.ePipeLeft, self.ePipeRight), controllerQueue=controllerQueue, pipe=m, motorDriver=motorDriver, gpioQueue=gpioQueue)
 		self.controlServer = commDriver(queue=controllerQueue, pipe=c)
-		self.Lencoder = Encoder(queue=encQueue, pin=util.leftEncPin, pipe=eLeft, driver=encoderDriver)
-		self.Rencoder = Encoder(queue=encQueue, pin=util.rightEncPin, pipe=eRight, driver=encoderDriver)
-		if self.microcontroller == "Edison":
-			self.Lencoder.driver.gpio = self.motorController.driver.gpio
-			self.Rencoder.driver.gpio = self.motorController.driver.gpio
-                self.Lencoder.setupPin()
-                self.Rencoder.setupPin()
+		# have to setup pins afterward because gpioProcess needs to be setup first
+        self.Lencoder.setupPin()
+        self.Rencoder.setupPin()
 
 	def startProcesses(self):
+		self.gpioProcess.start()
 		self.Lencoder.start()
 		self.Rencoder.start()
 		self.motorController.start()
@@ -80,8 +82,9 @@ class DDStarter:
 
 	def determineDrivers(self):
 		sys.path.append('drivers/')
+		sys.path.append('GPIO/')
 		# used to pull configuration from file
-		self.microcontroller = ""
+		util.microcontroller = ""
 		driver = ""
 		commDriver = ""
 		conf = open('config.txt', 'r')
@@ -93,38 +96,45 @@ class DDStarter:
 				if len(words) > 0:
 					# in all cases words[1] == '='
 					if words[0] == 'microcontroller':
-						self.microcontroller = words[2]
+						util.microcontroller = words[2]
 					elif words[0] == 'driver':
 						driver = words[2]
 					elif words[0] == 'commDriver':
 						commDriver = words[2]
 			line = conf.readline()
 		conf.close()
-		d = None
+
+		motorDriver = None
 		comm = None
 		enc = None
-		if self.microcontroller == 'RPi':
-			if driver == 'L298':
-				try:
-					import RPiL298Driver
-					import RPiEncoder
-				except ImportError as err:
-					print "Could not import drivers/RPiL298Driver, or drivers/RPiEncoder"
-					sys.exit(1)
-				else:
-					d = RPiL298Driver.RPiL298Driver
-					enc = RPiEncoder.RPiEncoder
-		elif self.microcontroller == 'Edison':
-			if driver == 'L298':
-				try:
-					import EdisonL298Driver
-					import EdisonEncoder
-				except ImportError as err:
-					print "Could not import drivers/EdisonL298Driver"
-					sys.exit(1)
-				else:
-					d = EdisonL298Driver.EdisonL298Driver
-					enc = EdisonEncoder.EdisonEncoder
+		gpio = None
+
+		if util.microcontroller == 'RPi':
+			try:
+				import RPiGPIODriver
+			except ImportError as err:
+				print err
+				print "Could not import RPiGPIODriver"
+				sys.exit(1)
+			else:
+				gpio = RPiGPIODriver.RPiGPIODriver
+		elif util.microcontroller == 'Edison':
+			try:
+				import EdisonGPIODriver
+			except ImportError as err:
+				print err
+				print "Could not import EdisonGPIODriver"
+				sys.exit(1)
+
+		if driver == 'L298':
+			try:
+				import L298Driver
+			except ImportError as err:
+				print "Could not import L298Driver"
+				sys.exit(1)
+			else:
+				motorDriver = L298Driver.L298Driver
+		# TODO encoder
 		if commDriver == 'Wifi':
 			try:
 				import WifiServer
@@ -134,7 +144,7 @@ class DDStarter:
 			else:
 				comm = WifiServer.WifiServer
 		#elif commDriver == 'Xbee':
-		return (d, comm, enc)
+		return (motorDriver, comm, enc, gpio)
 
 	def exitGracefully(self):
 		try:
