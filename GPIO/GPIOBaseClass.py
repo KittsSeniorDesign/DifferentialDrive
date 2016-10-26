@@ -80,7 +80,7 @@ class GPIOBaseClass(Process):
 
 	def consumeQueue(self):
 		while not self.commandQueue.empty():
-			a = self.commandQueue.get_nowait():
+			a = self.commandQueue.get_nowait()
 			if a:
 				if a[0] == 'setup':
 					# a[1] is pins

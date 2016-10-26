@@ -67,8 +67,8 @@ class DDStarter:
 		self.motorController = MotorController(encQueue=encQueue, encPipes=(self.ePipeLeft, self.ePipeRight), controllerQueue=controllerQueue, pipe=m, motorDriver=motorDriver, gpioQueue=gpioQueue)
 		self.controlServer = commDriver(queue=controllerQueue, pipe=c)
 		# have to setup pins afterward because gpioProcess needs to be setup first
-        self.Lencoder.setupPin()
-        self.Rencoder.setupPin()
+        	self.Lencoder.setupPin()
+        	self.Rencoder.setupPin()
 
 	def startProcesses(self):
 		self.gpioProcess.start()

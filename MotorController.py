@@ -66,10 +66,10 @@ class MotorController(Process):
 				self.controllerQueue = kwargs[key]
 			elif key == 'motorDriver':
 				d = kwargs[key]
-            elif key == 'gpioQueue'
-            	gpioQueue = kwargs[key]
-            self.driver = d(gpioQueue)
-            self.driver.setDC([0,0],[0,0])
+            		elif key == 'gpioQueue':
+            			gpioQueue = kwargs[key]
+            	self.driver = d(gpioQueue)
+            	self.driver.setDC([0,0],[0,0])
 
 	# vel in m/s
 	def setDCByVel(self, vel):

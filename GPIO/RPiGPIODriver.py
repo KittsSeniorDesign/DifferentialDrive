@@ -12,7 +12,7 @@ class RPiGPIODriver(GPIOBaseClass):
 
 	# dictionary of pins and pwmObjs
 	# _pwmObjs is of the form {pin: (pwmObj, pwmStarted), ...}
-	_pwmObjs = None
+	_pwmObjs = {}
 
 	def __init__(self, commandQueue, responsePipes):
 		super(RPiGPIODriver, self).__init__(commandQueue, responsePipes)
@@ -24,7 +24,7 @@ class RPiGPIODriver(GPIOBaseClass):
 		for i in range(0, len(pins)):
 			if modes[i] == 'INPUT':
 				GPIO.setup(pins[i], self.INPUT, pull_up_down=GPIO.PUD_DOWN)
-			elif modes[i] == 'OUTPUT':
+			elif modes[i] == 'OUTPUT' or modes[i] == 'PWM':
 				GPIO.setup(pins[i], self.OUTPUT)
 			elif modes[i] == 'ANALOG_INPUT':
 				GPIO.setup(pins[i], self.ANALOG_INPUT)
@@ -69,6 +69,7 @@ class RPiGPIODriver(GPIOBaseClass):
 	# args should be tuples
 	# it is assumed that the pins are already setup to be outputs
 	def write(self, pins, levels):
+		if 
 		for i in range(0, len(pins)):
 			GPIO.output(pins[i], levels[i])
 

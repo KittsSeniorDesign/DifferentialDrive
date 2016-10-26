@@ -3,6 +3,8 @@ from multiprocessing import Process
 from multiprocessing import Pipe
 from multiprocessing import Queue
 
+import util
+
 # the fastest I have seen it move is 0.511192102610497 m/s
 
 class Encoder(Process):
@@ -32,7 +34,7 @@ class Encoder(Process):
 			elif key == 'gpioQueue':
 				self.gpioQueue = kwargs[key]
 
-    def setupPin(self): 
+    	def setupPin(self): 
 		self.gpioQueue.put(['setup', self.pin, 'INPUT'])
 
 	def consumePipe(self):
@@ -52,7 +54,7 @@ class Encoder(Process):
 
 	# if level = None a stall occured
 	def waitForEdgeResponse(self, level, elapsedTime):
-		if level = None: #Stall occured
+		if level == None: #Stall occured
 			#TODO handle stall
 			self.count = 0
 			self.resetPeriod()
