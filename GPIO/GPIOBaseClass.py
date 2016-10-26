@@ -46,28 +46,28 @@ class GPIOBaseClass(Process):
 	def setupPWM(self, pins, frequencies):
 		print "Override setupPWM in class that inherits GPIOBaseClass"
 
-	# args should be tuples
+	# args should be tuples, lists or a single int
 	# changes the frequencies of the pwm signals on pins
 	def changeFrequency(self, pins, frequencies):
 		print "Override changeFrequency in class that inherits GPIOBaseClass"
 
-	# args should be tuples
+	# args should be tuples, lists or a single int
 	# sets the duty cycle of the pwm signal on the pwm pins based on powers
 	# value should be between 0-100, but some implementations may have an actual resolution of 255
 	def setDC(self, pins, values):
 		print "Override setDC in class that inherits GPIOBaseClass"
 
-	# args should be tuples
+	# args should be tuples, lists or a single int
 	# writes the values in levels to the corresponding pin in pins
 	def write(self, pins, levels):
 		print "Override writeToPin in class that inherits GPIOBaseClass"
 
-	# pin is not a list! It is a single pin
+	# pin is not a list, or tuple! It is a single pin
 	# _read should return the digital value of the pin, do a digitalRead()
 	def _read(self, pin):
 		print "Override _read in class that inherits GPIOBaseClass"
 
-	# pin is not a list! It is a single pin
+	# pin is not a list, or tuple! It is a single pin
 	# _analogRead should return the analogReading of the pin, doesn't make sense with RPi, need adc
 	def _analogRead(self, pin):
 		print "Override _analogRead in class that inherits GPIOBaseClass"
