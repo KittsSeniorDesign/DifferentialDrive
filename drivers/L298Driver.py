@@ -15,7 +15,7 @@ class L298Driver:
 		sys.path.append(os.path.abspath('..'))
 		import util
 		# TODO replace this with a read from a file
-		if util.microcontroller == 'Edision':
+		if util.microcontroller == 'Edison':
 			self.pwmPins = [5, 6]
 			self.dirPins = [[7, 8], [10, 9]] 
 		elif util.microcontroller == 'RPi':
