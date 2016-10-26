@@ -62,7 +62,7 @@ class RPiGPIODriver(GPIOBaseClass):
 			if not pins in self._pwmObjs:
 				self.setupPWM(pins, frequencies)
 			else:
-				self.-pwmObjs[pins][0].ChangeFrequency(frequencies)
+				self._pwmObjs[pins][0].ChangeFrequency(frequencies)
 
 	# args should be tuples, lists, or a single ints
 	def setDC(self, pins, values):
@@ -87,6 +87,8 @@ class RPiGPIODriver(GPIOBaseClass):
 		else: # must be ints
 			if pins in self._pwmObjs:
 				if values == 0:
+					print type(self._pwmObjs[pins][1])
+					print type(pins)
 					self._pwmObjs[pins][0].stop()
 					self._pwmObjs[pins][1] = False
 				# if values is valid
