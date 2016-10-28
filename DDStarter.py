@@ -3,7 +3,7 @@
 # This file was created by Ryan Cooper in 2016
 # to control a raspberry pi that is hooked up to motor controls
 # that control motors that create a differential drive
-# it can be controlled by keyboard or by an controlServer controller (possibly any HCI controller)
+# it can be controlled by keyboard or by an commProcess controller (possibly any HCI controller)
 import time
 import thread
 import signal
@@ -25,7 +25,7 @@ class DDStarter:
 	# a manager creates Queues that are safe to share between processes
 	motorController = None
 	# Differential Drive Motor Controller (DDMC)
-	controlServer = None
+	commProcess = None
 	gpioProcess = None
 	Lencoder = None
 	Rencoder = None
@@ -59,23 +59,27 @@ class DDStarter:
 		encQueue = manager.Queue()
 		controllerQueue = manager.Queue()
 		gpioQueue = manager.Queue()
+		# Only consumed at this time
+		# consumtion is by commProcess
+		# TODO make a process fill gcsDataQueue
+		gcsDataQueue = manager.Queue()
 		(motorDriver, commDriver, encoderDriver, gpioDriver) = self.determineDrivers()
 		# passing arguments to processes
 		self.Lencoder = Encoder(queue=encQueue, pin=util.leftEncPin, pipe=eLeft, gpioQueue=gpioQueue)
 		self.Rencoder = Encoder(queue=encQueue, pin=util.rightEncPin, pipe=eRight, gpioQueue=gpioQueue)
 		self.gpioProcess = gpioDriver(gpioQueue, {util.getIdentifier(self.Lencoder): self.ePipeLeft, util.getIdentifier(self.Rencoder): self.ePipeRight})
 		self.motorController = MotorController(encQueue=encQueue, encPipes=(self.ePipeLeft, self.ePipeRight), controllerQueue=controllerQueue, pipe=m, motorDriver=motorDriver, gpioQueue=gpioQueue)
-		self.controlServer = commDriver(queue=controllerQueue, pipe=c)
+		self.commProcess = commDriver(recvQueue=controllerQueue, sendQueue=gcsDataQueue)
 		# have to setup pins afterward because gpioProcess needs to be setup first
-        	self.Lencoder.setupPin()
-        	self.Rencoder.setupPin()
+		self.Lencoder.setupPin()
+		self.Rencoder.setupPin()
 
 	def startProcesses(self):
 		self.gpioProcess.start()
 		self.Lencoder.start()
 		self.Rencoder.start()
 		self.motorController.start()
-		self.controlServer.start()
+		self.commProcess.start()
 
 	def signal_handler(self, signal, frame):
 		self.exitGracefully()
@@ -153,7 +157,7 @@ class DDStarter:
 			print "Program was asked to terminate."
 			if self.motorController:
 				self.motorPipe.send('stop')	
-			if self.controlServer:
+			if self.commProcess:
 				self.controllerPipe.send('stop')
 			if self.Lencoder:
 				self.ePipeLeft.send('stop')
@@ -162,7 +166,7 @@ class DDStarter:
 			sys.stdout.write("Waiting for threads to exit...")
 			sys.stdout.flush()
 			self.motorController.join()
-			self.controlServer.join()
+			self.commProcess.join()
 			self.Lencoder.join()
 			self.Rencoder.join()
 			print "Done"
