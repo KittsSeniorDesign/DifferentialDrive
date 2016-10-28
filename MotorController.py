@@ -165,9 +165,10 @@ class MotorController(Process):
 						self.state = data[0]
 						self.steeringThrottle(data)# this calls changeMotorVals()
 					elif data[0] == self.VELOCITY_HEADING:
+						print data
 						self.state = data[0]
 						self.vhState = self.TURNING
-						self.desiredVel = data[1]
+						self.desiredVel = util.transform(data[1], 1000, 2000, util.minVel, util.maxVel)
 						self.desiredHeading = data[2]
 						self.goToHeading(self.desiredHeading)
 					self.lastQueue = time.time()
@@ -222,11 +223,14 @@ class MotorController(Process):
 			#	angle*radius=arclen
 			sys.stdout.write("Moving by radians: ")
 			sys.stdout.write(str(h))
+			sys.stdout.write("\n")
 			dist = h*util.botWidth/2.0
+			sys.stdout.write("dist=")
+			print dist
 			self.requiredCounts = int(abs(dist/util.distPerBlip))
 			sys.stdout.write(" requiredCounts ")
 			print self.requiredCounts
-			self.mPowers = [60, 60]
+			self.mPowers = [50, 50]
 			self.driver.setDC(self.mPowers,self.direction)
 
 	def resetEncoders(self):
@@ -235,14 +239,19 @@ class MotorController(Process):
 
 	# PID part of the wheel controller loop
 	def controlPowers(self, vel, pin):	#TODO possible use mm/sec instead of m/s because it will be more accurate because floating point is bad
+		print self.desiredVel
 		if self.desiredVel != 0:
 			p = self.desiredVel-vel
+			sys.stdout.write("Vel difference: ")
+			sys.stdout.write(str(p))
 			pPWM = 0
 			if abs(p) >= util.minVel:
 				if p > 0:
 					pPWM = util.transform(p, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
 				else:
 					pPWM = -util.transform(p, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
+			sys.stdout.write("PWM effort: ")
+			print pPWM
 			if(pin == util.leftEncPin):
 				self.mPowers[self.LEFT] = util.clampToRange(self.mPowers[self.LEFT]+pPWM, 0, 100)
 			elif(pin == util.rightEncPin):
@@ -251,7 +260,7 @@ class MotorController(Process):
 				print "Encoder is reading data to an unexpected pin"
 		else:
 			self.mPowers = [0, 0]
-		self.driver.setDC(self.mPowers,self.direction)
+		self.driver.setDC(self.mPowers, self.direction)
 
 	def handleEncoderQueue(self):	
 		while not self.encQueue.empty():	
@@ -269,7 +278,6 @@ class MotorController(Process):
 					# note, does not check which motor moved the desired amount, possible change this
 					print data
 					if data[1] >= self.requiredCounts:
-						print "dirt"
 						self.vhState = self.DRIVING
 						self.currentHeading = self.desiredHeading
 						self.setDCByVel(self.desiredVel)
@@ -308,4 +316,4 @@ class MotorController(Process):
 			print "Motor controller"
 			print msg
 			self.mPowers = [0, 0]
-			self.setDC(self.mPowers, [0, 0])
+			self.driver.setDC(self.mPowers, [0, 0])

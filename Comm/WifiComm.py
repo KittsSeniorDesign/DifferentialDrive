@@ -5,6 +5,7 @@
 # This class starts a server to listen to an xbox controller which is plugged into a 
 # client computer that can connect to the robot
 import socket, time, sys
+from socket import error as socket_error
 
 from multiprocessing import Process
 from multiprocessing import Queue
