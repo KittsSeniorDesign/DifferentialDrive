@@ -152,8 +152,9 @@ class DDStarter:
 	def exitGracefully(self):
 		try:
 			print "Program was asked to terminate."
-			sys.stdout.write("Waiting for processes to exit...")
-			sys.stdout.flush()
+			print "Waiting for processes to exit..."
+			self.commProcess.join()
+			self.gpioProcess.join()
 			self.motorController.join()
 			self.Lencoder.join()
 			self.Rencoder.join()

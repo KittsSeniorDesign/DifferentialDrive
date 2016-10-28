@@ -161,7 +161,6 @@ class MotorController(Process):
 						self.state = data[0]
 						self.steeringThrottle(data)# this calls changeMotorVals()
 					elif data[0] == self.VELOCITY_HEADING:
-						print data
 						self.state = data[0]
 						self.vhState = self.TURNING
 						self.desiredVel = util.transform(data[1], 1000, 2000, util.minVel, util.maxVel)
@@ -235,7 +234,6 @@ class MotorController(Process):
 
 	# PID part of the wheel controller loop
 	def controlPowers(self, vel, pin):	#TODO possible use mm/sec instead of m/s because it will be more accurate because floating point is bad
-		print self.desiredVel
 		if self.desiredVel != 0:
 			p = self.desiredVel-vel
 			sys.stdout.write("Vel difference: ")
@@ -281,10 +279,13 @@ class MotorController(Process):
 					# data[2] = seconds/blip
 					# convert to rotations per second 
 					# then multiply by distance wheel travels in one rotation
+					print data[2]
 					# result is mm/second
 					vel = 0
 					if data[2] != 0:
 						vel = util.circumferenceOfWheel*util.stateChangesPerRevolution/data[2]
+					sys.stdout.write("vel = ")
+					print vel
 					# calls setDC()
 					# pid part of the loop
 					self.controlPowers(vel, data[0])
