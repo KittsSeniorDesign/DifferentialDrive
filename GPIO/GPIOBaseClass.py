@@ -133,7 +133,12 @@ class GPIOBaseClass(Process):
 			del self.cfeData[key]
 
 	def run(self):
-		a = None
-		while self.commandQueue:
-			self.consumeQueue()
-			self.checkForEdges()
+		try:
+			a = None
+			while self.commandQueue:
+				self.consumeQueue()
+				self.checkForEdges()
+		except KeyboardInterrupt as msg:
+			print "KeyboardInterrupt detected. GPIOProcess is terminating"
+		finally:
+			self.exitGracefully()

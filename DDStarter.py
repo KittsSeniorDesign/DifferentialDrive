@@ -32,7 +32,6 @@ class DDStarter:
 	# pipes are used to terminate processes
 	ePipeLeft = None
 	ePipeRight = None
-	motorPipe = None
 	# var that holds microcontroller info from config.txt
 	microcontroller = ""
 	
@@ -52,7 +51,6 @@ class DDStarter:
 		# pipes for process termination
 		self.ePipeLeft, eLeft = Pipe() 
 		self.ePipeRight, eRight = Pipe()
-		self.motorPipe, m = Pipe() 
 		# queues for interprocess communication
 		encQueue = manager.Queue()
 		controllerQueue = manager.Queue()
@@ -66,7 +64,7 @@ class DDStarter:
 		self.Lencoder = Encoder(queue=encQueue, pin=util.leftEncPin, pipe=eLeft, gpioQueue=gpioQueue)
 		self.Rencoder = Encoder(queue=encQueue, pin=util.rightEncPin, pipe=eRight, gpioQueue=gpioQueue)
 		self.gpioProcess = gpioDriver(gpioQueue, {util.getIdentifier(self.Lencoder): self.ePipeLeft, util.getIdentifier(self.Rencoder): self.ePipeRight})
-		self.motorController = MotorController(encQueue=encQueue, encPipes=(self.ePipeLeft, self.ePipeRight), controllerQueue=controllerQueue, pipe=m, motorDriver=motorDriver, gpioQueue=gpioQueue)
+		self.motorController = MotorController(encQueue=encQueue, encPipes=(self.ePipeLeft, self.ePipeRight), controllerQueue=controllerQueue, motorDriver=motorDriver, gpioQueue=gpioQueue)
 		self.commProcess = commDriver(recvQueue=controllerQueue, sendQueue=gcsDataQueue)
 		# have to setup pins afterward because gpioProcess needs to be setup first
 		self.Lencoder.setupPin()
@@ -154,13 +152,7 @@ class DDStarter:
 	def exitGracefully(self):
 		try:
 			print "Program was asked to terminate."
-			if self.motorController:
-				self.motorPipe.send('stop')	
-			if self.Lencoder:
-				self.ePipeLeft.send('stop')
-			if self.Rencoder:
-				self.ePipeRight.send('stop')
-			sys.stdout.write("Waiting for threads to exit...")
+			sys.stdout.write("Waiting for processes to exit...")
 			sys.stdout.flush()
 			self.motorController.join()
 			self.Lencoder.join()

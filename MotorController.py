@@ -41,8 +41,6 @@ class MotorController(Process):
 	# only consumes these queue
 	encQueue = None
 	controllerQueue = None
-	# used to shut the process down
-	pipe = None
 	#list used to reset the counts of the encoders
 	encPipes = None
 
@@ -60,8 +58,6 @@ class MotorController(Process):
 				self.encQueue = kwargs[key]
 			elif key == 'encPipes':
 				self.encPipes = kwargs[key]
-			elif key == 'pipe':
-				self.pipe = kwargs[key]
 			elif key == 'controllerQueue':
 				self.controllerQueue = kwargs[key]
 			elif key == 'motorDriver':
@@ -293,14 +289,6 @@ class MotorController(Process):
 					# pid part of the loop
 					self.controlPowers(vel, data[0])
 
-	# check to see if the process should stop
-	def checkIfShouldStop(self):
-		if self.pipe.poll():
-			data = self.pipe.recv()
-			if (not data == None) and 'stop' in data:
-				self.go = False
-				self.pipe.close()
-
 	def run(self):
 		self.go = True
 		try:
@@ -309,11 +297,13 @@ class MotorController(Process):
 			#	print self.direction
 				self.handleControllerQueue()
 				self.handleEncoderQueue()
-				self.checkIfShouldStop()
-				time.sleep(.01)
-			self.exitGracefully()
+		except KeyboardInterrupt as msg:
+			print "KeyboardInterrupt detected. MotorContoller is terminating"
+			self.go = False	
 		except Exception as msg:
 			print "Motor controller"
 			print msg
 			self.mPowers = [0, 0]
 			self.driver.setDC(self.mPowers, [0, 0])
+		finally:
+			self.exitGracefully()
