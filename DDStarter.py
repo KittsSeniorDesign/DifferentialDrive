@@ -33,7 +33,6 @@ class DDStarter:
 	ePipeLeft = None
 	ePipeRight = None
 	motorPipe = None
-	controllerPipe = None
 	# var that holds microcontroller info from config.txt
 	microcontroller = ""
 	
@@ -54,7 +53,6 @@ class DDStarter:
 		self.ePipeLeft, eLeft = Pipe() 
 		self.ePipeRight, eRight = Pipe()
 		self.motorPipe, m = Pipe() 
-		self.controllerPipe , c = Pipe()
 		# queues for interprocess communication
 		encQueue = manager.Queue()
 		controllerQueue = manager.Queue()
@@ -87,6 +85,7 @@ class DDStarter:
 	def determineDrivers(self):
 		sys.path.append('drivers/')
 		sys.path.append('GPIO/')
+		sys.path.append('Comm/')
 		# used to pull configuration from file
 		util.microcontroller = ""
 		driver = ""
@@ -143,12 +142,12 @@ class DDStarter:
 		# TODO encoder
 		if commDriver == 'Wifi':
 			try:
-				import WifiServer
+				import WifiComm
 			except ImportError as err:
-				print "Could not import drivers/WifiServer"
+				print "Could not import Comm/WifiComm"
 				sys.exit(1)
 			else:
-				comm = WifiServer.WifiServer
+				comm = WifiComm.WifiComm
 		#elif commDriver == 'Xbee':
 		return (motorDriver, comm, enc, gpio)
 
@@ -157,8 +156,6 @@ class DDStarter:
 			print "Program was asked to terminate."
 			if self.motorController:
 				self.motorPipe.send('stop')	
-			if self.commProcess:
-				self.controllerPipe.send('stop')
 			if self.Lencoder:
 				self.ePipeLeft.send('stop')
 			if self.Rencoder:
@@ -166,7 +163,6 @@ class DDStarter:
 			sys.stdout.write("Waiting for threads to exit...")
 			sys.stdout.flush()
 			self.motorController.join()
-			self.commProcess.join()
 			self.Lencoder.join()
 			self.Rencoder.join()
 			print "Done"

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from multiprocessing import Process
 from multiprocessing import Queue
 # import signal so that main threads try except statement will catch keyboard interrupt
 import thread, signal, struct
@@ -19,7 +20,7 @@ class CommBaseClass(Process):
 	bytesToRead = 12
 
 	def __init__(self, recvQueue, sendQueue):
-		super(GPIOBaseClass, self).__init()
+		super(CommBaseClass, self).__init__()
 		self.recvQueue = recvQueue
 		self.sendQueue = sendQueue
 
@@ -45,12 +46,13 @@ class CommBaseClass(Process):
 	# don't overload this unless necessary
 	# This is called from run()
 	def handleIncomingData(self):
+		self.waitForConnection()
 		while self.go:
 			data = self.recv()
 			if len(data) == 0:
 				self.resetClient()
 				self.waitForConnection()
-			else: # communicate with MotorController
+			elif len(data) == self.bytesToRead: # fill recvQueue for pilot to consume
 				controlScheme = struct.unpack('i', data[0:4])[0]
 				if controlScheme != 4: # defined as VELOCITY_HEADING in MotorController.py
 					self.recvQueue.put([
@@ -80,7 +82,7 @@ class CommBaseClass(Process):
 	def run(self):
 		try:
 			t = thread.start_new_thread(self.handleIncomingData, ())
-			while go:
+			while self.go:
 				self.handleOutgoingData() 
 		except KeyboardInterrupt as msg:
 			print "KeyboardInterrupt detected. CommProcess is terminating"

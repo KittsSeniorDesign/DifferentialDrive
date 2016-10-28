@@ -48,15 +48,17 @@ class WifiComm(CommBaseClass):
 		self.clientsocket = None
 
 	def recv(self):
-		return self.clientsocket.recv(self.bytesToRead)
+		if self.clientsocket:
+			return self.clientsocket.recv(self.bytesToRead)
+		else:
+			return 0	
 
 	def handleIncomingData(self):
 		try:
-			super(WifiComm, self).handeIncomingData()
-		except Exception as msg:
-			print type(msg)
-			if 'Errno 104' in msg:
-				self.resetClient()
+			super(WifiComm, self).handleIncomingData()
+		except socket_error as msg:
+			self.resetClient()
+			self.waitForConnection()
 
 	# TODO
 	def send(self, data):
