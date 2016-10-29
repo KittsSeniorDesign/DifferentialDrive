@@ -17,7 +17,7 @@ class Encoder(Process):
 	# used to shut the process down
 	pipe = None
 	go = True
-	pSize = 10
+	pSize = 40
 	periods = [-1.0]*pSize
 	periodIndex = 0
 	timeout = .1 # seconds
@@ -76,7 +76,10 @@ class Encoder(Process):
 			else:
 				ave += self.periods[i]
 		# return average of valid periods, i+1 because i will never equal self.pSize
-		return ave/(i+1)
+		if i < 10:
+			return -1
+		else:
+			return ave/(i+1)
 
 	# TODO wait for edge
 	def run(self):

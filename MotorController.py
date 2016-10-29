@@ -163,7 +163,10 @@ class MotorController(Process):
 					elif data[0] == self.VELOCITY_HEADING:
 						self.state = data[0]
 						self.vhState = self.TURNING
-						self.desiredVel = util.transform(data[1], 1000, 2000, util.minVel, util.maxVel)
+						self.desiredVel = util.transform(data[1], 1000, 2000, -util.maxVel, util.maxVel)
+						if abs(self.desiredVel) >= .1:
+							self.mPowers = [0, 0]
+							self.driver.setDC(self.mPowers, self.direction)
 						self.desiredHeading = data[2]
 						self.goToHeading(self.desiredHeading)
 					self.lastQueue = time.time()
@@ -234,27 +237,28 @@ class MotorController(Process):
 
 	# PID part of the wheel controller loop
 	def controlPowers(self, vel, pin):	#TODO possible use mm/sec instead of m/s because it will be more accurate because floating point is bad
-		if self.desiredVel != 0:
-			p = self.desiredVel-vel
-			sys.stdout.write("Vel difference: ")
-			sys.stdout.write(str(p))
-			pPWM = 0
-			if abs(p) >= util.minVel:
-				if p > 0:
-					pPWM = util.transform(p, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
+		if vel != -1:
+			if self.desiredVel != 0:
+				p = self.desiredVel-vel
+				sys.stdout.write("Vel difference: ")
+				sys.stdout.write(str(p))
+				pPWM = 0
+				if abs(p) >= util.minVel:
+					if p > 0:
+						pPWM = util.transform(p, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
+					else:
+						pPWM = -util.transform(p, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
+				sys.stdout.write("PWM effort: ")
+				print pPWM
+				if(pin == util.leftEncPin):
+					self.mPowers[self.LEFT] = util.clampToRange(self.mPowers[self.LEFT]+pPWM, 0, 100)
+				elif(pin == util.rightEncPin):
+					self.mPowers[self.RIGHT] = util.clampToRange(self.mPowers[self.RIGHT]+pPWM, 0, 100)
 				else:
-					pPWM = -util.transform(p, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
-			sys.stdout.write("PWM effort: ")
-			print pPWM
-			if(pin == util.leftEncPin):
-				self.mPowers[self.LEFT] = util.clampToRange(self.mPowers[self.LEFT]+pPWM, 0, 100)
-			elif(pin == util.rightEncPin):
-				self.mPowers[self.RIGHT] = util.clampToRange(self.mPowers[self.RIGHT]+pPWM, 0, 100)
+					print "Encoder is reading data to an unexpected pin"
 			else:
-				print "Encoder is reading data to an unexpected pin"
-		else:
-			self.mPowers = [0, 0]
-		self.driver.setDC(self.mPowers, self.direction)
+				self.mPowers = [0, 0]
+			self.driver.setDC(self.mPowers, self.direction)
 
 	def handleEncoderQueue(self):	
 		while not self.encQueue.empty():	
@@ -281,9 +285,9 @@ class MotorController(Process):
 					# then multiply by distance wheel travels in one rotation
 					print data[2]
 					# result is mm/second
-					vel = 0
-					if data[2] != 0:
-						vel = util.circumferenceOfWheel*util.stateChangesPerRevolution/data[2]
+					vel = -1
+					if data[2] > -1:
+						vel = util.stateChangesPerRevolution/data[2]
 					sys.stdout.write("vel = ")
 					print vel
 					# calls setDC()

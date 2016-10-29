@@ -1,11 +1,13 @@
 # utility functions
 
 diameterOfWheel = 65.087 # mm
+radiusOfWheel = 32.5435 # mm
 circumferenceOfWheel = 204.476841044199 # mm  diameterofWheel*pi
 stateChangesPerRevolution = 40.0 # there are 20 slots, but 40 state changes
+cirDivChanges = circumferenceOfWheel/stateChangesPerRevolution
 distPerBlip = 5.11192102610497 # mm  circumfrenceOfWheel/stateChangesPerRevolution
 maxVel = 511.92102620497 # mm/s  distPerBlip/getAverageBlip() when pwm = 100
-minVel = 10.0 # mm/s just a guess //TODO make not a guess
+minVel = .1 # mm/s just a guess //TODO make not a guess
 botWidth = 139.7 #mm distance from middle of tire to the other wheel's middle of its tire
  
 # this is different for both RPi and Edison
