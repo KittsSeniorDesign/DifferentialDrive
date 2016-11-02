@@ -4,6 +4,30 @@ from multiprocessing import Process
 from multiprocessing import Queue
 import time
 
+class PinWaiter(Process):
+	gpio = None 
+	pin = None
+	timeout = None
+	pipe = None
+
+	def __init__(self, gpiobaseclass, pin, timeout, pipe):
+		super(PinWaiter, self).__init()
+		self.gpio = gpiobaseclass
+		self.pin = pin
+		self.timeout = timeout
+		self.pipe = pipe
+		self.start()
+
+	def run(self)
+		starttime = time.time()
+		initLevel = self.gpio._read(self.pin)
+		while time.time()-starttime < self.timeout and self.gpio._read(self.pin) == initLevel:
+			pass
+			# test preformace with and without
+			#time.sleep(.001)
+		self.pipe.send([self.pin, !initLevel time.time()-starttime])
+		self.gpio.waitProcesses.remove(self)
+
 class GPIOBaseClass(Process):
 	
 	OUTPUT = "Override in inherited class"
@@ -16,18 +40,17 @@ class GPIOBaseClass(Process):
 	commandQueue = None
 	# dictionary of the form {uniqueProcessIdentifier: responsePipe, ...} where responsePipe is a connection object
 	responsePipes = None
-	# stores which processes are waiting for an edge on which pin (cfe=checkForEdge)
-	# of the form {uniqueProcessIdentifier: (pin, originalReading, timeOfInitialReading), ...}
-	cfeData = {}
+
+	waitProcesses = []
 
 	# childs init should call the super constructor 
 	# and things like 
 	#	GPIO.setmode() if raspberry pi 
 	#	or GPIO(debug=False) if edison
 	def __init__(self, commandQueue, responsePipes):
+		super(GPIOBaseClass, self).__init__()
 		self.commandQueue = commandQueue
 		self.responsePipes = responsePipes
-		super(GPIOBaseClass, self).__init__()
 
 	# pins should be a tuple of which pins to setup
 	# modes should be the corresponding mode for each pin in pins
@@ -108,36 +131,17 @@ class GPIOBaseClass(Process):
 					# a[1] = uniqueProcessIdentifier
 					# a[2] = pin to wait for an edge
 					# a[3] = timeout to wait in seconds
-					self.cfeData[a[1]] = (a[2], self._read(a[2]), time.time(), a[3])
+					self.waitProcesses.append(PinWaiter(self, a[2], a[3], self.responsePipes[a[1]]))
 				elif a[0] == 'analogRead':
 					# a[1] = uniqueProcessIdentifier
 					# a[2] = pin to read
 					self.responsePipes[a[1]].send(self._analogRead(a[2]))
-
-	# will inform processes that requested to wait for an edge
-	# with a list of the form (pin, level, time elapsed since request)
-	def checkForEdges(self):
-		keysToRemove = []
-		for key in self.cfeData:
-			elapsed = time.time()-self.cfeData[key][2]
-			if elapsed > self.cfeData[key][3]:
-				self.responsePipes[key].send((self.cfeData[key][0], None, elapsed))
-				keysToRemove.append(key)
-			else:
-				currentReading = self._read(self.cfeData[key][0])
-				# if originalReading != currentReading
-				if self.cfeData[key][1] != currentReading:
-					self.responsePipes[key].send((self.cfeData[key][0], str(currentReading), time.time()-self.cfeData[key][2]))
-					keysToRemove.append(key)
-		for key in keysToRemove:
-			del self.cfeData[key]
 
 	def run(self):
 		try:
 			a = None
 			while self.commandQueue:
 				self.consumeQueue()
-				self.checkForEdges()
 		except KeyboardInterrupt as msg:
 			print "KeyboardInterrupt detected. GPIOProcess is terminating"
 		finally:
