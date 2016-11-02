@@ -3,7 +3,7 @@
 from multiprocessing import Process
 from multiprocessing import Queue
 # import signal so that main threads try except statement will catch keyboard interrupt
-import thread, signal, struct
+import thread, signal, struct, time
 
 class CommBaseClass(Process):
 	# This queue is filled with the data that is sent from ground control to the robot

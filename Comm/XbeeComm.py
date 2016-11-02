@@ -9,7 +9,6 @@ from xbee import XBee
 # install with:
 # pip install pyserial
 import serial
-import time
 
 from CommBaseClass import CommBaseClass
 import threading
