@@ -247,7 +247,8 @@ class MotorController(Process):
 					if p > 0:
 						pPWM = util.transform(p, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
 					else:
-						pPWM = -util.transform(p, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
+						print "dirt"
+						pPWM = -util.transform(-p, util.minVel, util.maxVel, self.driver.minDC, self.driver.maxDC)
 				sys.stdout.write("PWM effort: ")
 				print pPWM
 				if(pin == util.leftEncPin):
@@ -288,8 +289,6 @@ class MotorController(Process):
 					vel = -1
 					if data[2] > -1:
 						vel = util.stateChangesPerRevolution/data[2]
-					sys.stdout.write("vel = ")
-					print vel
 					# calls setDC()
 					# pid part of the loop
 					self.controlPowers(vel, data[0])

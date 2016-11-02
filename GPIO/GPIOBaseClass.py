@@ -2,7 +2,7 @@
 
 from multiprocessing import Process
 from multiprocessing import Queue
-import time
+import time, os
 
 class GPIOBaseClass(Process):
 	
@@ -25,9 +25,10 @@ class GPIOBaseClass(Process):
 	#	GPIO.setmode() if raspberry pi 
 	#	or GPIO(debug=False) if edison
 	def __init__(self, commandQueue, responsePipes):
+		super(GPIOBaseClass, self).__init__()
 		self.commandQueue = commandQueue
 		self.responsePipes = responsePipes
-		super(GPIOBaseClass, self).__init__()
+		os.nice(-5)
 
 	# pins should be a tuple of which pins to setup
 	# modes should be the corresponding mode for each pin in pins
