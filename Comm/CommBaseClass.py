@@ -25,9 +25,9 @@ class CommBaseClass(Process):
 		self.sendQueue = sendQueue
 
 	def waitForConnection(self):
-		raise NotImplementedError("Overload waitForConnection in class that inherits CommBaseClass")
+		raise NotImplementedError("Override waitForConnection in class that inherits CommBaseClass")
 
-	# overload this function in inherited class, but make sure to call this function in
+	# override this function in inherited class, but make sure to call this function in
 	# the beginning. For example:
 	# 	def resetClient(self, waitForReconnect = True):
 	#		super(ChildClass, self).resetClient(waitForReconnect)
@@ -36,14 +36,14 @@ class CommBaseClass(Process):
 		print "Controller disconnected!"
 		# Stop the bot
 		self.recvQueue.put([3,1500,1500])
-		# remember to inherit, overload, and call super class function!!!
+		# remember to inherit, override, and call super class function!!!
 
 	# should be blocking
 	# returns a list of the bytes recieved from a connection in the child class
 	def recv(self):
-		raise NotImplementedError("Overload recv in class that inherits CommBaseClass")
+		raise NotImplementedError("Override recv in class that inherits CommBaseClass")
 
-	# don't overload this unless necessary
+	# don't override this unless necessary
 	# This is called from run()
 	def handleIncomingData(self):
 		self.waitForConnection()
@@ -69,7 +69,7 @@ class CommBaseClass(Process):
 
 	# sends data across the connecion in the child class
 	def send(self, data):
-		raise NotImplementedError("Overload send in class that inherits CommBaseClass")
+		raise NotImplementedError("Override send in class that inherits CommBaseClass")
 
 	def handleOutgoingData(self):
 		while not self.sendQueue.empty():
@@ -77,13 +77,14 @@ class CommBaseClass(Process):
 			self.send(d)
 
 	def exitGracefully(self):
-		raise NotImplementedError("Overload exitGracefully in class that inherits CommBaseClass")
+		raise NotImplementedError("Override exitGracefully in class that inherits CommBaseClass")
 
 	def run(self):
 		try:
 			t = thread.start_new_thread(self.handleIncomingData, ())
 			while self.go:
 				self.handleOutgoingData() 
+				time.sleep(.01)
 		except KeyboardInterrupt as msg:
 			print "KeyboardInterrupt detected. CommProcess is terminating"
 			self.go = False

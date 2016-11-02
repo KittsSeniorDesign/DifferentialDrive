@@ -61,9 +61,8 @@ class WifiComm(CommBaseClass):
 			self.resetClient()
 			self.waitForConnection()
 
-	# TODO
 	def send(self, data):
-		raise NotImplementedError("I haven't gotten around to implementing send in WifiServer")
+		self.clientsocket.send(data)
 			
 	def exitGracefully(self):
 		if self.clientsocket:
