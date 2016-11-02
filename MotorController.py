@@ -161,6 +161,7 @@ class MotorController(Process):
 						self.state = data[0]
 						self.steeringThrottle(data)# this calls changeMotorVals()
 					elif data[0] == self.VELOCITY_HEADING:
+						print "velHeading entered"
 						self.state = data[0]
 						self.vhState = self.TURNING
 						self.desiredVel = util.transform(data[1], 1000, 2000, -util.maxVel, util.maxVel)
