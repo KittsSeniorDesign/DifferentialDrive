@@ -29,6 +29,9 @@ class DDStarter:
 	gpioProcess = None
 	Lencoder = None
 	Rencoder = None
+	# pipes are used to terminate processes
+	ePipeLeft = None
+	ePipeRight = None
 	# var that holds microcontroller info from config.txt
 	microcontroller = ""
 	
@@ -46,8 +49,8 @@ class DDStarter:
 		# used to create multi-process safe queues
 		manager = Manager()
 		# pipes for process termination
-		ePipeLeft, eLeft = Pipe() 
-		ePipeRight, eRight = Pipe()
+		self.ePipeLeft, eLeft = Pipe() 
+		self.ePipeRight, eRight = Pipe()
 		# queues for interprocess communication
 		encQueue = manager.Queue()
 		controllerQueue = manager.Queue()
@@ -60,7 +63,7 @@ class DDStarter:
 		# passing arguments to processes
 		self.Lencoder = Encoder(queue=encQueue, pin=util.leftEncPin, pipe=eLeft, gpioQueue=gpioQueue)
 		self.Rencoder = Encoder(queue=encQueue, pin=util.rightEncPin, pipe=eRight, gpioQueue=gpioQueue)
-		self.gpioProcess = gpioDriver(gpioQueue, [[util.leftEncPin, self.ePipeLeft, .1], [util.rightEncPin, self.ePipeRight, .1]])
+		self.gpioProcess = gpioDriver(gpioQueue, {util.getIdentifier(self.Lencoder): self.ePipeLeft, util.getIdentifier(self.Rencoder): self.ePipeRight})
 		self.motorController = MotorController(encQueue=encQueue, encPipes=(self.ePipeLeft, self.ePipeRight), controllerQueue=controllerQueue, motorDriver=motorDriver, gpioQueue=gpioQueue)
 		self.commProcess = commDriver(recvQueue=controllerQueue, sendQueue=gcsDataQueue)
 		# have to setup pins afterward because gpioProcess needs to be setup first

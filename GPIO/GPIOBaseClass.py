@@ -4,29 +4,6 @@ from multiprocessing import Process
 from multiprocessing import Queue
 import time, os
 
-class WaitForEdgeProcess(Process):
-	gpio = None
-	pin = None
-	pipe = None
-	timeout = None
-
-	def __init__(self, GPIOBaseClass, pin, pipe, timeout):
-		self.gpio = GPIOBaseClass
-		self.pin = pin
-		self.pipe = pipe
-		self.timeout = timeout
-		self.start()
-
-	def run(self):
-		# while parent process is alive
-		while self.gpio.commandQueue:
-			stime = time.time()
-			initLevel = self.gpio._read(self.pin)
-			# wait for the pin to change levels
-			while self.gpio._read(self.pin) == initLevel and timeout > time.time()-stime:
-				pass
-			self.pipe.send([self.pin, time.time()-stime])
-
 class GPIOBaseClass(Process):
 	
 	OUTPUT = "Override in inherited class"
@@ -37,18 +14,20 @@ class GPIOBaseClass(Process):
 	# set in __init__
 	# used to change pin or pwm values, or to request a input or analog read
 	commandQueue = None
+	# dictionary of the form {uniqueProcessIdentifier: responsePipe, ...} where responsePipe is a connection object
+	responsePipes = None
+	# stores which processes are waiting for an edge on which pin (cfe=checkForEdge)
+	# of the form {uniqueProcessIdentifier: (pin, originalReading, timeOfInitialReading), ...}
+	cfeData = {}
 
 	# childs init should call the super constructor 
 	# and things like 
 	#	GPIO.setmode() if raspberry pi 
 	#	or GPIO(debug=False) if edison
-	# waitForEdges should be a list or tuple of the form [[pin, pipe, timeout]...] timeout in seconds
-	# the pipe should go to the process that wants to know about edges (Encoder.py)
-	def __init__(self, commandQueue, waitForEdges):
+	def __init__(self, commandQueue, responsePipes):
 		super(GPIOBaseClass, self).__init__()
 		self.commandQueue = commandQueue
-		for w in waitForEdges:
-			self.waitForEdgeProcesses.append(WaitForEdgeProcess(self, w[0], w[1], w[2]))
+		self.responsePipes = responsePipes
 		os.nice(-5)
 
 	# pins should be a tuple of which pins to setup
@@ -89,6 +68,11 @@ class GPIOBaseClass(Process):
 	def _read(self, pin):
 		raise NotImplementedError("Override _read in class that inherits GPIOBaseClass")
 
+	# pin is not a list, or tuple! It is a single pin
+	# _analogRead should return the analogReading of the pin, doesn't make sense with RPi, need adc
+	def _analogRead(self, pin):
+		raise NotImplementedError("Override _analogRead in class that inherits GPIOBaseClass")
+
 	# should still override this function to cleanup gpio and pwm stuff
 	# but also make sure to call this function from the super class
 	def exitGracefully(self):
@@ -121,12 +105,40 @@ class GPIOBaseClass(Process):
 					self.write(a[1], a[2])
 				elif a[0] == 'exitGracefully':
 					self.exitGracefuly()
+				elif a[0] == 'waitForEdge':
+					# a[1] = uniqueProcessIdentifier
+					# a[2] = pin to wait for an edge
+					# a[3] = timeout to wait in seconds
+					self.cfeData[a[1]] = (a[2], self._read(a[2]), time.time(), a[3])
+				elif a[0] == 'analogRead':
+					# a[1] = uniqueProcessIdentifier
+					# a[2] = pin to read
+					self.responsePipes[a[1]].send(self._analogRead(a[2]))
+
+	# will inform processes that requested to wait for an edge
+	# with a list of the form (pin, level, time elapsed since request)
+	def checkForEdges(self):
+		keysToRemove = []
+		for key in self.cfeData:
+			elapsed = time.time()-self.cfeData[key][2]
+			if elapsed > self.cfeData[key][3]:
+				self.responsePipes[key].send((self.cfeData[key][0], None, elapsed))
+				keysToRemove.append(key)
+			else:
+				currentReading = self._read(self.cfeData[key][0])
+				# if originalReading != currentReading
+				if self.cfeData[key][1] != currentReading:
+					self.responsePipes[key].send((self.cfeData[key][0], str(currentReading), time.time()-self.cfeData[key][2]))
+					keysToRemove.append(key)
+		for key in keysToRemove:
+			del self.cfeData[key]
 
 	def run(self):
 		try:
 			a = None
 			while self.commandQueue:
 				self.consumeQueue()
+				self.checkForEdges()
 		except KeyboardInterrupt as msg:
 			print "KeyboardInterrupt detected. GPIOProcess is terminating"
 		finally:

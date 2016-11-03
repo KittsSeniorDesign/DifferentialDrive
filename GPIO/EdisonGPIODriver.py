@@ -15,8 +15,8 @@ class EdisonGPIODriver(GPIOBaseClass):
 	ANALOG_INPUT = GPIO.ANALOG_INPUT
 
 
-	def __init__(self, commandQueue, waitForEdges):
-		super(EdisonGPIODriver, self).__init__(commandQueue, waitForEdges)
+	def __init__(self, commandQueue, responsePipes):
+		super(EdisonGPIODriver, self).__init__(commandQueue, responsePipes)
 		self._gpio = GPIO(debug=False)
 
 	# args should be tuples, list, or a single int
@@ -94,9 +94,9 @@ class EdisonGPIODriver(GPIOBaseClass):
 	def _read(self, pin):
 		return self._gpio.digitalRead(pin)
 
-	# it is assumed that the pin was setup to be a self._gpio.ANALOG_INPUT before this is called
-	#def _analogRead(self, pin):
-	#	return self._gpio.analogRead(pin)
+	# ait is assumed that the pin was setup to be a self._gpio.ANALOG_INPUT before this is called
+	def _analogRead(self, pin):
+		return self._gpio.analogRead(pin)
 
 	def exitGracefully(self):
 		super(EdisonGPIODriver, self).exitGracefully()
