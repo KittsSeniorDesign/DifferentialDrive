@@ -6,7 +6,6 @@
 # it can be controlled by keyboard or by an commProcess controller (possibly any HCI controller)
 import time
 import thread
-import signal
 import sys
 from multiprocessing import Pipe
 from multiprocessing import Queue
@@ -38,12 +37,6 @@ class DDStarter:
 	def __init__(self):
 		self.makeClasses()
 		self.startProcesses()
-		# Catch SIGINT from ctrl-c when run interactively.
-		signal.signal(signal.SIGINT, self.signal_handler)
-		# Catch SIGTERM from kill when running as a daemon.
-		signal.signal(signal.SIGTERM, self.signal_handler)
-		# This thread of execution will sit here until a signal is caught
-		signal.pause()
 
 	def makeClasses(self):
 		# used to create multi-process safe queues
@@ -76,9 +69,6 @@ class DDStarter:
 		self.Rencoder.start()
 		self.motorController.start()
 		self.commProcess.start()
-
-	def signal_handler(self, signal, frame):
-		self.exitGracefully()
 
 	def determineDrivers(self):
 		sys.path.append('drivers/')
@@ -146,7 +136,12 @@ class DDStarter:
 				sys.exit(1)
 			else:
 				comm = WifiComm.WifiComm
-		#elif commDriver == 'Xbee':
+		elif commDriver == 'Xbee':
+			try:
+				import XbeeComm
+			except ImportError as err:
+				print "Could not import Comm/XbeeComm"
+				sys.exit(1)
 		return (motorDriver, comm, enc, gpio)
 
 	def exitGracefully(self):
