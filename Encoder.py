@@ -81,7 +81,6 @@ class Encoder(Process):
 		else:
 			return ave/(i+1)
 
-	# TODO wait for edge
 	def run(self):
 		try:
 			self.go = True

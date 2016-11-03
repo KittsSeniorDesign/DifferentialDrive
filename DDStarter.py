@@ -4,16 +4,13 @@
 # to control a raspberry pi that is hooked up to motor controls
 # that control motors that create a differential drive
 # it can be controlled by keyboard or by an commProcess controller (possibly any HCI controller)
-import time
-import thread
-import sys
 from multiprocessing import Pipe
 from multiprocessing import Queue
 from multiprocessing import Manager
+import time, sys, argparse
 
 from MotorController import MotorController
 from Encoder import Encoder
-
 import util
 
 class DDStarter:
@@ -35,10 +32,19 @@ class DDStarter:
 	microcontroller = ""
 	
 	def __init__(self):
-		self.makeClasses()
-		self.startProcesses()
+		parser = argparse.ArgumentParser(description="Arguments are for debuggin only.")
+		parser.add_argument('--encoders', dest='testEncoder', action="store_true", help="Starts encoder system test")
+		args = parser.parse_args()
+		if args.testEncoder:
+			self.runEncoderTest()
+		else:
+			self.runNormally()
 
-	def makeClasses(self):
+	# TODO
+	def runEncoderTest(self):
+		pass
+
+	def runNormally(self):
 		# used to create multi-process safe queues
 		manager = Manager()
 		# pipes for process termination
@@ -62,8 +68,6 @@ class DDStarter:
 		# have to setup pins afterward because gpioProcess needs to be setup first
 		self.Lencoder.setupPin()
 		self.Rencoder.setupPin()
-
-	def startProcesses(self):
 		self.gpioProcess.start()
 		self.Lencoder.start()
 		self.Rencoder.start()
@@ -127,7 +131,6 @@ class DDStarter:
 				sys.exit(1)
 			else:
 				motorDriver = L298Driver.L298Driver
-		# TODO encoder
 		if commDriver == 'Wifi':
 			try:
 				import WifiComm
