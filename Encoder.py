@@ -34,7 +34,7 @@ class Encoder(Process):
 			elif key == 'gpioQueue':
 				self.gpioQueue = kwargs[key]
 
-    	def setupPin(self): 
+	def setupPin(self): 
 		self.gpioQueue.put(['setup', self.pin, 'INPUT'])
 
 	def consumePipe(self):
@@ -47,7 +47,6 @@ class Encoder(Process):
 				# data[1] = level of pin
 				# data[2] = time since request
 				self.waitForEdgeResponse(data[1], data[2])
-				self.gpioQueue.put(['waitForEdge', util.getIdentifier(self), self.pin, self.timeout])
 
 	# if level = None a stall occured
 	def waitForEdgeResponse(self, level, elapsedTime):
@@ -85,7 +84,6 @@ class Encoder(Process):
 	def run(self):
 		try:
 			self.go = True
-			self.gpioQueue.put(['waitForEdge', util.getIdentifier(self), self.pin, self.timeout])
 			while self.go:
 				self.consumePipe()
 		except KeyboardInterrupt as msg:

@@ -14,8 +14,8 @@ class RPiGPIODriver(GPIOBaseClass):
 	# _pwmObjs is of the form {pin: (pwmObj, pwmStarted), ...}
 	_pwmObjs = {}
 
-	def __init__(self, commandQueue, responsePipes):
-		super(RPiGPIODriver, self).__init__(commandQueue, responsePipes)
+	def __init__(self, commandQueue, waitForEdges):
+		super(RPiGPIODriver, self).__init__(commandQueue, waitForEdges)
 		GPIO.setmode(GPIO.BOARD)
 		GPIO.setwarnings(False)
 
@@ -114,10 +114,6 @@ class RPiGPIODriver(GPIOBaseClass):
 	# it is assumed that pin is setup to be GPIO.INPUT
 	def _read(self, pin):
 		return GPIO.input(pin)
-
-	def _analogRead(self, pin):
-		print ANALOG_INPUT
-		return -1
 
 	def exitGracefully(self):
 		super(RPiGPIODriver, self).exitGracefully()
