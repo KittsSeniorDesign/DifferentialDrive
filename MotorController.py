@@ -85,6 +85,8 @@ class MotorController(Process):
 		self.driver.setDC(self.mPowers,self.direction)
 
 	def exitGracefully(self):
+		self.mPowers = [0, 0]
+		self.driver.setDC(self.mPowers, self.direction)
 		go = False
 
 	def steeringThrottle(self, data):
