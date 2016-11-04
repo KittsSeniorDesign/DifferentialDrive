@@ -3,18 +3,14 @@
 # This file was created by Ryan Cooper in 2016
 # to control a raspberry pi that is hooked up to motor controls
 # that control motors that create a differential drive
-# it can be controlled by keyboard or by an controlServer controller (possibly any HCI controller)
-import time
-import thread
-import signal
-import sys
+# it can be controlled by keyboard or by an commProcess controller (possibly any HCI controller)
 from multiprocessing import Pipe
 from multiprocessing import Queue
 from multiprocessing import Manager
+import time, sys, argparse, signal
 
 from MotorController import MotorController
 from Encoder import Encoder
-
 import util
 
 class DDStarter:
@@ -25,21 +21,24 @@ class DDStarter:
 	# a manager creates Queues that are safe to share between processes
 	motorController = None
 	# Differential Drive Motor Controller (DDMC)
-	controlServer = None
+	commProcess = None
 	gpioProcess = None
 	Lencoder = None
 	Rencoder = None
 	# pipes are used to terminate processes
 	ePipeLeft = None
 	ePipeRight = None
-	motorPipe = None
-	controllerPipe = None
 	# var that holds microcontroller info from config.txt
 	microcontroller = ""
 	
 	def __init__(self):
-		self.makeClasses()
-		self.startProcesses()
+		parser = argparse.ArgumentParser(description="Arguments are for debuggin only.")
+		parser.add_argument('--encoders', dest='testEncoder', action="store_true", help="Starts encoder system test")
+		args = parser.parse_args()
+		if args.testEncoder:
+			self.runEncoderTest()
+		else:
+			self.runNormally()
 		# Catch SIGINT from ctrl-c when run interactively.
 		signal.signal(signal.SIGINT, self.signal_handler)
 		# Catch SIGTERM from kill when running as a daemon.
@@ -47,42 +46,76 @@ class DDStarter:
 		# This thread of execution will sit here until a signal is caught
 		signal.pause()
 
-	def makeClasses(self):
+	def signal_handler(self, signal, frame):
+		self.exitGracefully()
+
+	# TODO
+	def runEncoderTest(self):
 		# used to create multi-process safe queues
 		manager = Manager()
 		# pipes for process termination
 		self.ePipeLeft, eLeft = Pipe() 
 		self.ePipeRight, eRight = Pipe()
-		self.motorPipe, m = Pipe() 
-		self.controllerPipe , c = Pipe()
 		# queues for interprocess communication
 		encQueue = manager.Queue()
 		controllerQueue = manager.Queue()
 		gpioQueue = manager.Queue()
+		# Only consumed at this time
+		# consumtion is by commProcess
+		# TODO make a process fill gcsDataQueue
+		gcsDataQueue = manager.Queue()
 		(motorDriver, commDriver, encoderDriver, gpioDriver) = self.determineDrivers()
 		# passing arguments to processes
 		self.Lencoder = Encoder(queue=encQueue, pin=util.leftEncPin, pipe=eLeft, gpioQueue=gpioQueue)
 		self.Rencoder = Encoder(queue=encQueue, pin=util.rightEncPin, pipe=eRight, gpioQueue=gpioQueue)
 		self.gpioProcess = gpioDriver(gpioQueue, {util.getIdentifier(self.Lencoder): self.ePipeLeft, util.getIdentifier(self.Rencoder): self.ePipeRight})
-		self.motorController = MotorController(encQueue=encQueue, encPipes=(self.ePipeLeft, self.ePipeRight), controllerQueue=controllerQueue, pipe=m, motorDriver=motorDriver, gpioQueue=gpioQueue)
-		self.controlServer = commDriver(queue=controllerQueue, pipe=c)
+		self.motorController = MotorController(encQueue=encQueue, encPipes=(self.ePipeLeft, self.ePipeRight), controllerQueue=controllerQueue, motorDriver=motorDriver, gpioQueue=gpioQueue)
+		self.motorController.state = self.motorController.ENCODER_TEST
+		self.motorController.requiredCounts = 40
 		# have to setup pins afterward because gpioProcess needs to be setup first
-        	self.Lencoder.setupPin()
-        	self.Rencoder.setupPin()
-
-	def startProcesses(self):
+		self.Lencoder.setupPin()
+		self.Rencoder.setupPin()
 		self.gpioProcess.start()
 		self.Lencoder.start()
 		self.Rencoder.start()
 		self.motorController.start()
-		self.controlServer.start()
+		self.motorController.driver.setDC([100,100], [0,0])
 
-	def signal_handler(self, signal, frame):
-		self.exitGracefully()
+
+	def runNormally(self):
+		# used to create multi-process safe queues
+		manager = Manager()
+		# pipes for process termination
+		self.ePipeLeft, eLeft = Pipe() 
+		self.ePipeRight, eRight = Pipe()
+		# queues for interprocess communication
+		encQueue = manager.Queue()
+		controllerQueue = manager.Queue()
+		gpioQueue = manager.Queue()
+		# Only consumed at this time
+		# consumtion is by commProcess
+		# TODO make a process fill gcsDataQueue
+		gcsDataQueue = manager.Queue()
+		(motorDriver, commDriver, encoderDriver, gpioDriver) = self.determineDrivers()
+		# passing arguments to processes
+		self.Lencoder = Encoder(queue=encQueue, pin=util.leftEncPin, pipe=eLeft, gpioQueue=gpioQueue)
+		self.Rencoder = Encoder(queue=encQueue, pin=util.rightEncPin, pipe=eRight, gpioQueue=gpioQueue)
+		self.gpioProcess = gpioDriver(gpioQueue, {util.getIdentifier(self.Lencoder): self.ePipeLeft, util.getIdentifier(self.Rencoder): self.ePipeRight})
+		self.motorController = MotorController(encQueue=encQueue, encPipes=(self.ePipeLeft, self.ePipeRight), controllerQueue=controllerQueue, motorDriver=motorDriver, gpioQueue=gpioQueue)
+		self.commProcess = commDriver(recvQueue=controllerQueue, sendQueue=gcsDataQueue)
+		# have to setup pins afterward because gpioProcess needs to be setup first
+		self.Lencoder.setupPin()
+		self.Rencoder.setupPin()
+		self.gpioProcess.start()
+		self.Lencoder.start()
+		self.Rencoder.start()
+		self.motorController.start()
+		self.commProcess.start()
 
 	def determineDrivers(self):
 		sys.path.append('drivers/')
 		sys.path.append('GPIO/')
+		sys.path.append('Comm/')
 		# used to pull configuration from file
 		util.microcontroller = ""
 		driver = ""
@@ -136,33 +169,29 @@ class DDStarter:
 				sys.exit(1)
 			else:
 				motorDriver = L298Driver.L298Driver
-		# TODO encoder
 		if commDriver == 'Wifi':
 			try:
-				import WifiServer
+				import WifiComm
 			except ImportError as err:
-				print "Could not import drivers/WifiServer"
+				print "Could not import Comm/WifiComm"
 				sys.exit(1)
 			else:
-				comm = WifiServer.WifiServer
-		#elif commDriver == 'Xbee':
+				comm = WifiComm.WifiComm
+		elif commDriver == 'Xbee':
+			try:
+				import XbeeComm
+			except ImportError as err:
+				print "Could not import Comm/XbeeComm"
+				sys.exit(1)
 		return (motorDriver, comm, enc, gpio)
 
 	def exitGracefully(self):
 		try:
 			print "Program was asked to terminate."
-			if self.motorController:
-				self.motorPipe.send('stop')	
-			if self.controlServer:
-				self.controllerPipe.send('stop')
-			if self.Lencoder:
-				self.ePipeLeft.send('stop')
-			if self.Rencoder:
-				self.ePipeRight.send('stop')
-			sys.stdout.write("Waiting for threads to exit...")
-			sys.stdout.flush()
+			print "Waiting for processes to exit..."
+			self.commProcess.join()
+			self.gpioProcess.join()
 			self.motorController.join()
-			self.controlServer.join()
 			self.Lencoder.join()
 			self.Rencoder.join()
 			print "Done"

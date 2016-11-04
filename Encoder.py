@@ -17,7 +17,7 @@ class Encoder(Process):
 	# used to shut the process down
 	pipe = None
 	go = True
-	pSize = 10
+	pSize = 40
 	periods = [-1.0]*pSize
 	periodIndex = 0
 	timeout = .1 # seconds
@@ -40,10 +40,7 @@ class Encoder(Process):
 	def consumePipe(self):
 		while self.pipe.poll():
 			data = self.pipe.recv()
-			if 'stop' == data:
-				self.go = False
-				self.pipe.close()
-			elif 'reset' == data:
+			if 'reset' == data:
 				self.count = 0
 				self.resetPeriod()
 			elif len(data) == 3:
@@ -79,11 +76,19 @@ class Encoder(Process):
 			else:
 				ave += self.periods[i]
 		# return average of valid periods, i+1 because i will never equal self.pSize
-		return ave/(i+1)
+		if i < 10:
+			return -1
+		else:
+			return ave/(i+1)
 
-	# TODO wait for edge
 	def run(self):
-		self.go = True
-		self.gpioQueue.put(['waitForEdge', util.getIdentifier(self), self.pin, self.timeout])
-		while self.go:
-			self.consumePipe()
+		try:
+			self.go = True
+			self.gpioQueue.put(['waitForEdge', util.getIdentifier(self), self.pin, self.timeout])
+			while self.go:
+				self.consumePipe()
+		except KeyboardInterrupt as msg:
+			print "KeyboardInterrupt detected. EncoderProcess is terminating"
+			self.go = False
+		finally:
+			self.pipe.close()

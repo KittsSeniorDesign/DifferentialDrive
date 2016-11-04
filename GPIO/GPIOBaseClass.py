@@ -2,7 +2,7 @@
 
 from multiprocessing import Process
 from multiprocessing import Queue
-import time
+import time, os
 
 class GPIOBaseClass(Process):
 	
@@ -25,9 +25,10 @@ class GPIOBaseClass(Process):
 	#	GPIO.setmode() if raspberry pi 
 	#	or GPIO(debug=False) if edison
 	def __init__(self, commandQueue, responsePipes):
+		super(GPIOBaseClass, self).__init__()
 		self.commandQueue = commandQueue
 		self.responsePipes = responsePipes
-		super(GPIOBaseClass, self).__init__()
+		os.nice(-5)
 
 	# pins should be a tuple of which pins to setup
 	# modes should be the corresponding mode for each pin in pins
@@ -38,39 +39,39 @@ class GPIOBaseClass(Process):
 	# elif len(pins) == 1:
 	# 		GPIO.setupPin(pins, modes)	
 	def setup(self, pins, modes):
-		print "Override setup in class that inherits GPIOBaseClass"
+		raise NotImplementedError("Override setup in class that inherits GPIOBaseClass")
 
 	# pins should be a tuple of which pins to use for pwm
 	# frequencies should be the corresponding PWM wave frequencies in herts for each pin
 	# should be very similar to setupPins
 	def setupPWM(self, pins, frequencies):
-		print "Override setupPWM in class that inherits GPIOBaseClass"
+		raise NotImplementedError("Override setupPWM in class that inherits GPIOBaseClass")
 
 	# args should be tuples, lists or a single int
 	# changes the frequencies of the pwm signals on pins
 	def changeFrequency(self, pins, frequencies):
-		print "Override changeFrequency in class that inherits GPIOBaseClass"
+		raise NotImplementedError("Override changeFrequency in class that inherits GPIOBaseClass")
 
 	# args should be tuples, lists or a single int
 	# sets the duty cycle of the pwm signal on the pwm pins based on powers
 	# value should be between 0-100, but some implementations may have an actual resolution of 255
 	def setDC(self, pins, values):
-		print "Override setDC in class that inherits GPIOBaseClass"
+		raise NotImplementedError("Override setDC in class that inherits GPIOBaseClass")
 
 	# args should be tuples, lists or a single int
 	# writes the values in levels to the corresponding pin in pins
 	def write(self, pins, levels):
-		print "Override writeToPin in class that inherits GPIOBaseClass"
+		raise NotImplementedError("Override writeToPin in class that inherits GPIOBaseClass")
 
 	# pin is not a list, or tuple! It is a single pin
 	# _read should return the digital value of the pin, do a digitalRead()
 	def _read(self, pin):
-		print "Override _read in class that inherits GPIOBaseClass"
+		raise NotImplementedError("Override _read in class that inherits GPIOBaseClass")
 
 	# pin is not a list, or tuple! It is a single pin
 	# _analogRead should return the analogReading of the pin, doesn't make sense with RPi, need adc
 	def _analogRead(self, pin):
-		print "Override _analogRead in class that inherits GPIOBaseClass"
+		raise NotImplementedError("Override _analogRead in class that inherits GPIOBaseClass")
 
 	# should still override this function to cleanup gpio and pwm stuff
 	# but also make sure to call this function from the super class
@@ -133,7 +134,12 @@ class GPIOBaseClass(Process):
 			del self.cfeData[key]
 
 	def run(self):
-		a = None
-		while self.commandQueue:
-			self.consumeQueue()
-			self.checkForEdges()
+		try:
+			a = None
+			while self.commandQueue:
+				self.consumeQueue()
+				self.checkForEdges()
+		except KeyboardInterrupt as msg:
+			print "KeyboardInterrupt detected. GPIOProcess is terminating"
+		finally:
+			self.exitGracefully()
