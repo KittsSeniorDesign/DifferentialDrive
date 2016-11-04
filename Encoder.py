@@ -57,7 +57,7 @@ class Encoder(Process):
 			self.resetPeriod()
 		else:
 			self.count += 1
-			print count
+			print self.count
 			self.periods[self.periodIndex] = elapsedTime
 	# increment self.periodIndex and keep it within range of self.pSize = len(self.periods)
 			self.periodIndex = (self.periodIndex+1)%self.pSize;
