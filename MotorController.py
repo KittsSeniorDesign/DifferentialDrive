@@ -300,11 +300,12 @@ class MotorController(Process):
 						# pid part of the loop
 						self.controlPowers(vel, data[0])
 				elif self.state == self.ENCODER_TEST:
+					print data
 					if data[1] >= self.requiredCounts:
 						self.mPowers = [0, 0]
 						self.driver.setDC(self.mPowers, self.direction)
 						time.sleep(1)
-						self.mPowers = [25, 25]
+						self.mPowers = [35, 35]
 						self.requiredCounts = util.stateChangesPerRevolution
 						self.driver.setDC(self.mPowers, self.direction)
 
