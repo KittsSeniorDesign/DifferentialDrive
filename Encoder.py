@@ -52,14 +52,15 @@ class Encoder(Process):
 	def waitForEdgeResponse(self, level, elapsedTime):
 		if elapsedTime >= self.timeout: #Stall occured
 			#TODO handle stall
+			print "OH NO! A STALL"
 			self.count = 0
 			self.resetPeriod()
 		else:
 			self.count += 1
-			print self.count
 			self.periods[self.periodIndex] = elapsedTime
 	# increment self.periodIndex and keep it within range of self.pSize = len(self.periods)
 			self.periodIndex = (self.periodIndex+1)%self.pSize;
+		self.driverQueue.put([self.pin ,self.count, self.getAveragePeriodBetweenBlips()])
 
 	def resetPeriod(self):
 		self.periods = [-1]*self.pSize

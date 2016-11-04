@@ -16,16 +16,15 @@ class WaitForEdgeProc(Process):
 		self.timeout = timeout
 		self.gpio = gpio
 		super(WaitForEdgeProc, self).__init__()
-		os.nice(-5)
 
 	def run(self):
 		try:
-			while self.commandQueue:
+			while self.gpio.commandQueue:
 				stime = time.time()
-				initVal = self._read(pin)
-				while self._read(pin) == initVal and timeout > time.time()-stime:
+				initVal = self.gpio._read(self.pin)
+				while self.gpio._read(self.pin) == initVal and self.timeout > time.time()-stime:
 					pass
-				pipe.send([pin, initVal, time.time()-stime])
+				self.pipe.send([self.pin, initVal, time.time()-stime])
 		except KeyboardInterrupt as msg:
 			pass
 

@@ -191,14 +191,14 @@ class DDStarter:
 			print "Waiting for processes to exit..."
 			if self.commProcess:
 				self.commProcess.join()
-			if self.gpioProcess:
-				self.gpioProcess.join()
 			if self.motorController:
 				self.motorController.join()
 			if self.Lencoder:
 				self.Lencoder.join()
 			if self.Rencoder:
 				self.Rencoder.join()
+			if self.gpioProcess:
+				self.gpioProcess.join()
 			print "Done"
 			sys.exit(0)
 		except Exception as msg:
