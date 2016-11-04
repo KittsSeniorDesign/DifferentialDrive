@@ -1,64 +1,67 @@
 #!/usr/bin/env python
 
 from GPIOBaseClass import GPIOBaseClass
-from wiringx86 import GPIOEdison as GPIO
+import mraa
 import sys, os
 # so we can see util
 sys.path.append(os.path.abspath('..'))
 import util
 
 class EdisonGPIODriver(GPIOBaseClass):
-	_gpio = None
-	OUTPUT = GPIO.OUTPUT
-	INPUT = GPIO.INPUT
-	PWM = GPIO.PWM
-	ANALOG_INPUT = GPIO.ANALOG_INPUT
-
+	OUTPUT = mraa.DIR_OUT
+	INPUT = mraa.DIR_IN
+	PWM = ""
+	ANALOG_INPUT = ""
+	gpioDict = {}
+	pwmDict = {}
 
 	def __init__(self, commandQueue, responsePipes):
 		super(EdisonGPIODriver, self).__init__(commandQueue, responsePipes)
-		self._gpio = GPIO(debug=False)
 
 	# args should be tuples, list, or a single int
 	def setup(self, pins, modes):
 		if type(pins) is list or type(pins) is tuple:
 			for i in range(0, len(pins)):
 				if modes[i] == 'INPUT':
-					self._gpio.pinMode(pins[i], self.INPUT)
+					self.gpioDict[pins[i]] = mraa.Gpio(pins[i])
+					self.gpioDict[pins[i]].dir(self.INPUT)
 				elif modes[i] == 'OUTPUT':
-					self._gpio.pinMode(pins[i], self.OUTPUT)
+					self.gpioDict[pins[i]] = mraa.Gpio(pins[i])
+					self.gpioDict[pins[i]].dir(self.OUTPUT)
 				elif modes[i] == 'ANALOG_INPUT':
-					self._gpio.pinMode(pins[i], self.ANALOG_INPUT)
+					pass
 				elif modes[i] == 'PWM':
-					self._gpio.pinMode(pins[i], self.PWM)
+					self.setupPWM(pins[i], 60)
 		else:
-			if modes == 'INPUT':
-				self._gpio.pinMode(pins, self.INPUT)
-			elif modes == 'OUTPUT':
-				self._gpio.pinMode(pins, self.OUTPUT)
+			if modes[i] == 'INPUT':
+				self.gpioDict[pins] = mraa.Gpio(pins)
+				self.gpioDict[pins].dir(self.INPUT)
+			elif modes[i] == 'OUTPUT':
+				self.gpioDict[pins] = mraa.Gpio(pins)
+				self.gpioDict[pins].dir(self.OUTPUT)
 			elif modes == 'ANALOG_INPUT':
-				self._gpio.pinMode(pins, self.ANALOG_INPUT)
+				pass
 			elif modes == 'PWM':
-				self._gpio.pinMode(pins, self.PWM)
+				self.setupPWM(pins, 60)
 
 	# args should be tuples, lists, or a single int
 	def setupPWM(self, pins, frequencies):
 		if type(pins) is list or type(pins) is tuple:
 			for i in range(0, len(pins)):
-				self._gpio.setPWMPeriod(pins[i], 1.0/frequencies[i])
-				self._gpio.analogWrite(pins[i], 0)
+				self.pwmDict[pins[i]] = [mraa.Pwm(pins[i]), False]
+				self.pwmDict[pins[i]][0].period(1.0/frequencies[i])
 		else: # must be an int
-			self._gpio.setPWMPeriod(pins, 1.0/frequencies[i])
-			self._gpio.analogWrite(pins, 0)
+			self.pwmDict[pins] = [mraa.Pwm(pins), False]		
+			self.pwmDict[pins][0].period(1.0/frequencies)
 
 	# args should be tuples, lists, or a single int
 	# it is assumed that the entries of pins are already setup as PWM outputs
 	def changeFrequency(self, pins, frequencies):
 		if type(pins) is list or type(pins) is tuple:
 			for i in range(0, len(pins)):
-				self._gpio.setPWMPeriod(pins[i], 1.0/frequencies[i])
+				self.pwmDict[pins[i]][0].period(1.0/frequencies[i])
 		else: # must be an int
-			self._gpio.setPWMPeriod(pins, 1.0/frequencies)
+			self.pwmDict[pins][0].period(1.0/frequencies)
 
 	# args should be tuples, lists, or a single int
 	# it is assumed that the entries of pins are already setup as PWM outputs
@@ -66,41 +69,48 @@ class EdisonGPIODriver(GPIOBaseClass):
 		if type(pins) is list or type(pins) is tuple:
 			for i in range(0, len(pins)):
 				if values[i] >= 0 and values[i] <= 100:
-					# transform is done because analogWrite has a range from 0-100 for duty cycle values
-					self._gpio.analogWrite(pins[i], util.transform(values[i], 0, 100, 0, 255))
+					if values[i] != 0:
+						if not self.pwmDict[pins[i]][1]:
+							self.pwmDict[pins[i]][0].enable(True)
+							self.pwmDict[pins[i]][1] = True
+						self.pwmDict[pins[i]][0].write(values[i]/100.0)
+					else:
+						self.pwmDict[pins[i]][0].write(0)
+						self.pwmDict[pins[i]][0].enable(False)
+						self.pwmDict[pins[i]][1] = False
 				else:
 					print "Incorrect duty cycle value was provided"
 		else: # mut be an int
 			if values >- 0 and values <= 100:
-				# transform is done because analogWrite has a range from 0-100 for duty cycle values
-				self._gpio.analogWrite(pins, util.transform(values, 0, 100, 0, 255))
+				if values != 0:
+					if not self.pwmDict[pins][1]:
+						self.pwmDict[pins][0].enable(True)
+						self.pwmDict[pins][1] = True
+					self.pwmDict[pins][0].write(values/100.0)
+				else:
+					self.pwmDict[pins][0].write(0)
+					self.pwmDict[pins][0].enable(False)
+					self.pwmDict[pins][1] = False
 
 	# args should be tuples, lists, or a single int
 	# it is assumed that the pins are already setup to be outputs
 	def write(self, pins, levels):
 		if type(pins) is list or type(pins) is tuple:
 			for i in range(0, len(pins)):
-				val = GPIO.LOW
-				if levels[i]:
-					val = GPIO.HIGH
-				self._gpio.digitalWrite(pins[i], val)
+				self.gpioDict[pins[i]].write(levels[i])
 		else: # must be an int
-			val = GPIO.LOW
-			if levels:
-				val = GPIO.HIGH
-			self._gpio.digitalWrite(pins, levels)
+			self.gpioDict[pins].write(levels)
 
 	# ait is assumed that the pin was setup to be a self._gpio.INPUT before this is called
 	def _read(self, pin):
-		return self._gpio.digitalRead(pin)
+		return self.gpioDict[pin].read()
 
 	# ait is assumed that the pin was setup to be a self._gpio.ANALOG_INPUT before this is called
 	def _analogRead(self, pin):
-		return self._gpio.analogRead(pin)
+		pass
 
 	def exitGracefully(self):
 		super(EdisonGPIODriver, self).exitGracefully()
-		self._gpio.cleanup()
 
 if __name__ == '__main__':
 	from multiprocessing import Manager
