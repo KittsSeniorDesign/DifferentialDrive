@@ -273,7 +273,7 @@ class MotorController(Process):
 				# realistically this should never happen because we check to see that the queue is not empty
 				# but it is shared memory, and who knows?
 				good = False
-			if good 
+			if good: 
 				if self.state == self.VELOCITY_HEADING:
 					if self.vhState == self.TURNING:
 						# note, does not check which motor moved the desired amount, possible change this

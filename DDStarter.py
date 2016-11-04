@@ -7,7 +7,7 @@
 from multiprocessing import Pipe
 from multiprocessing import Queue
 from multiprocessing import Manager
-import time, sys, argparse
+import time, sys, argparse, signal
 
 from MotorController import MotorController
 from Encoder import Encoder
@@ -39,6 +39,15 @@ class DDStarter:
 			self.runEncoderTest()
 		else:
 			self.runNormally()
+		# Catch SIGINT from ctrl-c when run interactively.
+		signal.signal(signal.SIGINT, self.signal_handler)
+		# Catch SIGTERM from kill when running as a daemon.
+		signal.signal(signal.SIGTERM, self.signal_handler)
+		# This thread of execution will sit here until a signal is caught
+		signal.pause()
+
+	def signal_handler(self, signal, frame):
+		self.exitGracefully()
 
 	# TODO
 	def runEncoderTest(self):
