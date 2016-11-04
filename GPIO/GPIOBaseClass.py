@@ -78,8 +78,8 @@ class GPIOBaseClass(Process):
 	def exitGracefully(self):
 		# this is done to break out of the while loop in run so process terminates
 		self.commandQueue = None
-		for p in self.waitingProcs:
-			p.join()
+		#for p in self.waitingProcs:
+		#	p.join()
 
 	def consumeQueue(self):
 		while not self.commandQueue.empty():
