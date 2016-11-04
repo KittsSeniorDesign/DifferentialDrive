@@ -34,8 +34,16 @@ class Encoder(Process):
 			elif key == 'gpioQueue':
 				self.gpioQueue = kwargs[key]
 
-    	def setupPin(self): 
+	def setupPin(self): 
 		self.gpioQueue.put(['setup', self.pin, 'INPUT'])
+		self.gpioQueue.put(['waitForEdge', self.ISRCallback, self.pin])
+
+	def ISRCallback(self):
+		self.count += 1
+		print self.count
+		self.periods[self.periodIndex] = elapsedTime
+	# increment self.periodIndex and keep it within range of self.pSize = len(self.periods)
+		self.periodIndex = (self.periodIndex+1)%self.pSize;
 
 	def consumePipe(self):
 		while self.pipe.poll():
@@ -83,7 +91,6 @@ class Encoder(Process):
 	def run(self):
 		try:
 			self.go = True
-			self.gpioQueue.put(['waitForEdge', util.getIdentifier(self), self.pin, self.timeout, True])
 			while self.go:
 				self.consumePipe()
 		except KeyboardInterrupt as msg:

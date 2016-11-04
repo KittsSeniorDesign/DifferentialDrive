@@ -4,31 +4,6 @@ from multiprocessing import Process
 from multiprocessing import Queue
 import time, os
 
-class WaitForEdgeProc(Process):
-	pin = None
-	pipe = None
-	timeout = None
-	gpio = None
-
-	def __init__(self, pin, pipe, timeout, gpio):
-		self.pin = pin
-		self.pipe = pipe
-		self.timeout = timeout
-		self.gpio = gpio
-		super(WaitForEdgeProc, self).__init__()
-		os.nice(-5)
-
-	def run(self):
-		try:
-			while self.commandQueue:
-				stime = time.time()
-				initVal = self._read(pin)
-				while self._read(pin) == initVal and timeout > time.time()-stime:
-					pass
-				pipe.send([pin, initVal, time.time()-stime])
-		except KeyboardInterrupt as msg:
-			pass
-
 class GPIOBaseClass(Process):
 	
 	OUTPUT = "Override in inherited class"
@@ -133,20 +108,17 @@ class GPIOBaseClass(Process):
 				elif a[0] == 'exitGracefully':
 					self.exitGracefully()
 				elif a[0] == 'waitForEdge':
-					# a[1] = uniqueProcessIdentifier
+					# a[1] = callback function for the isr
 					# a[2] = pin to wait for an edge
-					# a[3] = timeout to wait in seconds
-					# a[4] = boolean to continously wait for edges
-					if a[4]:
-						p = WaitForEdgeProc(a[2], self.responsePipes[a[1]], a[3], self)
-						self.waitingProcs.append(p)
-						p.start()
-					else:
-						self.cfeData[a[1]] = (a[2], self._read(a[2]), time.time(), a[3])
+					self.setupWaitForEdgeISR(a[1], a[2])
 				elif a[0] == 'analogRead':
 					# a[1] = uniqueProcessIdentifier
 					# a[2] = pin to read
 					self.responsePipes[a[1]].send(self._analogRead(a[2]))
+
+	# it is assumed that the pin is already setup
+	def setupWaitForEdgeISR(self, callback, pin):
+		raise NotImplementedError("Override _setupWaitForEdgeISR in class that inherits GPIOBaseClass")
 
 	# will inform processes that requested to wait for an edge
 	# with a list of the form (pin, level, time elapsed since request)
