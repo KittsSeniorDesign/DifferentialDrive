@@ -22,6 +22,7 @@ class MotorController(Process):
 	STEERING_THROTTLE_ONBOARD = 2
 	TANK = 3
 	VELOCITY_HEADING = 4
+	ENCODER_TEST = 5
 	state = STEERING_THROTTLE_OFFBOARD
 
 	# possible velocity heading states
@@ -272,29 +273,38 @@ class MotorController(Process):
 				# realistically this should never happen because we check to see that the queue is not empty
 				# but it is shared memory, and who knows?
 				good = False
-			if good and self.state == self.VELOCITY_HEADING:
-				if self.vhState == self.TURNING:
-					# note, does not check which motor moved the desired amount, possible change this
-					print data
+			if good 
+				if self.state == self.VELOCITY_HEADING:
+					if self.vhState == self.TURNING:
+						# note, does not check which motor moved the desired amount, possible change this
+						print data
+						if data[1] >= self.requiredCounts:
+							self.vhState = self.DRIVING
+							self.currentHeading = self.desiredHeading
+							self.setDCByVel(self.desiredVel)
+					else:
+						# data[2] = seconds/blip
+						# convert to rotations per second 
+						# then multiply by distance wheel travels in one rotation
+						# result is mm/second
+						vel = -1
+						if data[2] > -1:
+							vel = util.stateChangesPerRevolution/data[2]
+						sys.stdout.write("vel=")
+						print vel
+						sys.stdout.write("desiredVel=")
+						print self.desiredVel
+						# calls setDC()
+						# pid part of the loop
+						self.controlPowers(vel, data[0])
+				elif self.state == self.ENCODER_TEST:
 					if data[1] >= self.requiredCounts:
-						self.vhState = self.DRIVING
-						self.currentHeading = self.desiredHeading
-						self.setDCByVel(self.desiredVel)
-				else:
-					# data[2] = seconds/blip
-					# convert to rotations per second 
-					# then multiply by distance wheel travels in one rotation
-					# result is mm/second
-					vel = -1
-					if data[2] > -1:
-						vel = util.stateChangesPerRevolution/data[2]
-					sys.stdout.write("vel=")
-					print vel
-					sys.stdout.write("desiredVel=")
-					print self.desiredVel
-					# calls setDC()
-					# pid part of the loop
-					self.controlPowers(vel, data[0])
+						self.mPowers = [0, 0]
+						self.driver.setDC(self.mPowers, self.direction)
+						time.sleep(1)
+						self.mPowers = [100, 100]
+						self.requiredCounts = util.stateChangesPerRevolution
+						self.driver.setDC(self.mPowers, self.direction)
 
 	def run(self):
 		self.go = True

@@ -42,7 +42,36 @@ class DDStarter:
 
 	# TODO
 	def runEncoderTest(self):
-		pass
+		# used to create multi-process safe queues
+		manager = Manager()
+		# pipes for process termination
+		self.ePipeLeft, eLeft = Pipe() 
+		self.ePipeRight, eRight = Pipe()
+		# queues for interprocess communication
+		encQueue = manager.Queue()
+		controllerQueue = manager.Queue()
+		gpioQueue = manager.Queue()
+		# Only consumed at this time
+		# consumtion is by commProcess
+		# TODO make a process fill gcsDataQueue
+		gcsDataQueue = manager.Queue()
+		(motorDriver, commDriver, encoderDriver, gpioDriver) = self.determineDrivers()
+		# passing arguments to processes
+		self.Lencoder = Encoder(queue=encQueue, pin=util.leftEncPin, pipe=eLeft, gpioQueue=gpioQueue)
+		self.Rencoder = Encoder(queue=encQueue, pin=util.rightEncPin, pipe=eRight, gpioQueue=gpioQueue)
+		self.gpioProcess = gpioDriver(gpioQueue, {util.getIdentifier(self.Lencoder): self.ePipeLeft, util.getIdentifier(self.Rencoder): self.ePipeRight})
+		self.motorController = MotorController(encQueue=encQueue, encPipes=(self.ePipeLeft, self.ePipeRight), controllerQueue=controllerQueue, motorDriver=motorDriver, gpioQueue=gpioQueue)
+		self.motorController.state = self.motorController.ENCODER_TEST
+		self.motorController.requiredCounts = 40
+		# have to setup pins afterward because gpioProcess needs to be setup first
+		self.Lencoder.setupPin()
+		self.Rencoder.setupPin()
+		self.gpioProcess.start()
+		self.Lencoder.start()
+		self.Rencoder.start()
+		self.motorController.start()
+		self.motorController.driver.setDC([100,100], [0,0])
+
 
 	def runNormally(self):
 		# used to create multi-process safe queues
