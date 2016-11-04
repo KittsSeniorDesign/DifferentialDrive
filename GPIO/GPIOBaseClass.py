@@ -19,6 +19,7 @@ class GPIOBaseClass(Process):
 	# stores which processes are waiting for an edge on which pin (cfe=checkForEdge)
 	# of the form {uniqueProcessIdentifier: (pin, originalReading, timeOfInitialReading), ...}
 	cfeData = {}
+	waitingProcs = []
 
 	# childs init should call the super constructor 
 	# and things like 
@@ -28,7 +29,6 @@ class GPIOBaseClass(Process):
 		super(GPIOBaseClass, self).__init__()
 		self.commandQueue = commandQueue
 		self.responsePipes = responsePipes
-		os.nice(-5)
 
 	# pins should be a tuple of which pins to setup
 	# modes should be the corresponding mode for each pin in pins
@@ -78,6 +78,8 @@ class GPIOBaseClass(Process):
 	def exitGracefully(self):
 		# this is done to break out of the while loop in run so process terminates
 		self.commandQueue = None
+		for p in self.waitingProcs:
+			p.join()
 
 	def consumeQueue(self):
 		while not self.commandQueue.empty():
@@ -104,16 +106,35 @@ class GPIOBaseClass(Process):
 					# a[2] is levels
 					self.write(a[1], a[2])
 				elif a[0] == 'exitGracefully':
-					self.exitGracefuly()
+					self.exitGracefully()
 				elif a[0] == 'waitForEdge':
 					# a[1] = uniqueProcessIdentifier
 					# a[2] = pin to wait for an edge
 					# a[3] = timeout to wait in seconds
-					self.cfeData[a[1]] = (a[2], self._read(a[2]), time.time(), a[3])
+					# a[4] = boolean to continously wait for edges
+					if a[4]:
+						p = Process(target=self.waitForEdges(a[2], self.responsePipes[a[1]], a[3]))
+						self.waitingProcs.append(p)
+						p.start()
+					else:
+						self.cfeData[a[1]] = (a[2], self._read(a[2]), time.time(), a[3])
 				elif a[0] == 'analogRead':
 					# a[1] = uniqueProcessIdentifier
 					# a[2] = pin to read
 					self.responsePipes[a[1]].send(self._analogRead(a[2]))
+
+	# this function is executed in a new process in a hope that it will detect edges better in its own process
+	def waitForEdges(self, pin, pipe, timeout):
+		try:
+			os.nice(-5)
+			while self.commandQueue:
+				stime = time.time()
+				initVal = self._read(pin)
+				while self._read(pin) == initVal and timeout > time.time()-stime:
+					pass
+				pipe.send([pin, initVal, time.time()-stime])
+		except KeyboardInterrupt as msg:
+			pass
 
 	# will inform processes that requested to wait for an edge
 	# with a list of the form (pin, level, time elapsed since request)

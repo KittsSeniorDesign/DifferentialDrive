@@ -302,7 +302,7 @@ class MotorController(Process):
 						self.mPowers = [0, 0]
 						self.driver.setDC(self.mPowers, self.direction)
 						time.sleep(1)
-						self.mPowers = [100, 100]
+						self.mPowers = [25, 25]
 						self.requiredCounts = util.stateChangesPerRevolution
 						self.driver.setDC(self.mPowers, self.direction)
 

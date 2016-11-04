@@ -47,7 +47,7 @@ class Encoder(Process):
 				# data[1] = level of pin
 				# data[2] = time since request
 				self.waitForEdgeResponse(data[1], data[2])
-				self.gpioQueue.put(['waitForEdge', util.getIdentifier(self), self.pin, self.timeout])
+				self.gpioQueue.put(['waitForEdge', util.getIdentifier(self), self.pin, self.timeout, True])
 
 	# if level = None a stall occured
 	def waitForEdgeResponse(self, level, elapsedTime):
@@ -57,6 +57,7 @@ class Encoder(Process):
 			self.resetPeriod()
 		else:
 			self.count += 1
+			print count
 			self.periods[self.periodIndex] = elapsedTime
 	# increment self.periodIndex and keep it within range of self.pSize = len(self.periods)
 			self.periodIndex = (self.periodIndex+1)%self.pSize;
