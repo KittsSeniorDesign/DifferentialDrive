@@ -19,16 +19,20 @@ class GPIOBaseClass(Process):
 	# stores which processes are waiting for an edge on which pin (cfe=checkForEdge)
 	# of the form {uniqueProcessIdentifier: (pin, originalReading, timeOfInitialReading), ...}
 	cfeData = {}
-	waitingProcs = []
+	encDict = {}
 
 	# childs init should call the super constructor 
 	# and things like 
 	#	GPIO.setmode() if raspberry pi 
 	#	or GPIO(debug=False) if edison
-	def __init__(self, commandQueue, responsePipes):
+	def __init__(self, commandQueue, responsePipes, encoderPins):
 		super(GPIOBaseClass, self).__init__()
 		self.commandQueue = commandQueue
 		self.responsePipes = responsePipes
+		for p in encoderPins:
+			e = Encoder()
+			self.encDict[p] = e
+			self.setupWaitForEdgeISR(e.edgeDetected, p)
 
 	# pins should be a tuple of which pins to setup
 	# modes should be the corresponding mode for each pin in pins

@@ -111,8 +111,8 @@ class RPiGPIODriver(GPIOBaseClass):
 		else: # must be ints
 			GPIO.output(pins, levels)
 
-	# it is assumed that the pin is already setup
 	def setupWaitForEdgeISR(self, callback, pin):
+		GPIO.setup(pin, GPIO.INPUT, pull_up_down=GPIO.PUD_DOWN)
 		GPIO.add_event_detect(pin, GPIO.BOTH, callback=callback)
 
 	# it is assumed that pin is setup to be GPIO.INPUT

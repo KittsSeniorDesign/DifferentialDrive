@@ -23,8 +23,6 @@ class DDStarter:
 	# Differential Drive Motor Controller (DDMC)
 	commProcess = None
 	gpioProcess = None
-	Lencoder = None
-	Rencoder = None
 	# pipes are used to terminate processes
 	ePipeLeft = None
 	ePipeRight = None
@@ -98,17 +96,11 @@ class DDStarter:
 		gcsDataQueue = manager.Queue()
 		(motorDriver, commDriver, encoderDriver, gpioDriver) = self.determineDrivers()
 		# passing arguments to processes
-		self.Lencoder = Encoder(queue=encQueue, pin=util.leftEncPin, pipe=eLeft, gpioQueue=gpioQueue)
-		self.Rencoder = Encoder(queue=encQueue, pin=util.rightEncPin, pipe=eRight, gpioQueue=gpioQueue)
-		self.gpioProcess = gpioDriver(gpioQueue, {util.getIdentifier(self.Lencoder): self.ePipeLeft, util.getIdentifier(self.Rencoder): self.ePipeRight})
+		self.gpioProcess = gpioDriver(gpioQueue, {}, [util.leftEncPin, util.rightEncPin])
 		self.motorController = MotorController(encQueue=encQueue, encPipes=(self.ePipeLeft, self.ePipeRight), controllerQueue=controllerQueue, motorDriver=motorDriver, gpioQueue=gpioQueue)
 		self.commProcess = commDriver(recvQueue=controllerQueue, sendQueue=gcsDataQueue)
 		# have to setup pins afterward because gpioProcess needs to be setup first
-		self.Lencoder.setupPin()
-		self.Rencoder.setupPin()
 		self.gpioProcess.start()
-		self.Lencoder.start()
-		self.Rencoder.start()
 		self.motorController.start()
 		self.commProcess.start()
 
@@ -193,10 +185,6 @@ class DDStarter:
 				self.commProcess.join()
 			if self.motorController:
 				self.motorController.join()
-			if self.Lencoder:
-				self.Lencoder.join()
-			if self.Rencoder:
-				self.Rencoder.join()
 			if self.gpioProcess:
 				self.gpioProcess.join()
 			print "Done"
