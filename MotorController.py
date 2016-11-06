@@ -39,11 +39,6 @@ class MotorController(Process):
 	# set by time.time(), used to stop bot when dced
 	lastQueue = 0
 	go = True
-	# only consumes these queue
-	encQueue = None
-	controllerQueue = None
-	#list used to reset the counts of the encoders
-	encPipes = None
 
 	# for vel/heading mode
 	desiredHeading = 0
@@ -52,21 +47,10 @@ class MotorController(Process):
 	currentHeading = 0
 	requiredCounts = 0
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, motorDriver):
 		super(MotorController, self).__init__()
-		for key in kwargs:
-			if key == 'encQueue':
-				self.encQueue = kwargs[key]
-			elif key == 'encPipes':
-				self.encPipes = kwargs[key]
-			elif key == 'controllerQueue':
-				self.controllerQueue = kwargs[key]
-			elif key == 'motorDriver':
-				d = kwargs[key]
-            		elif key == 'gpioQueue':
-            			gpioQueue = kwargs[key]
-            	self.driver = d(gpioQueue)
-            	self.driver.setDC([0,0],[0,0])
+		self.driver = motorDriver()
+		self.driver.setDC([0,0],[0,0])
 
 	# vel in m/s
 	def setDCByVel(self, vel):
@@ -136,18 +120,18 @@ class MotorController(Process):
 	def handleControllerQueue(self):
 		#print self.state
 		# if there hasn't been anything in the queue in half a second
-		if self.state != self.VELOCITY_HEADING and time.time()-self.lastQueue > .5 and self.controllerQueue.empty():
+		if self.state != self.VELOCITY_HEADING and time.time()-self.lastQueue > .5 and util.controllerQueue.empty():
 			# stop the bot
 			self.direction = [0, 0]
 			self.mPowers = [0, 0]
 			self.lastQueue = time.time()
 		else:
-			while not self.controllerQueue.empty(): # this is a while so that the most recent thing in the queue is the resultant command that is done
+			while not util.controllerQueue.empty(): # this is a while so that the most recent thing in the queue is the resultant command that is done
 				good = True
 				try:
 					# nowait because this process was called from the main loop which controls the motors
 					# so we don't want this function to block.
-					data = self.controllerQueue.get_nowait()
+					data = util.controllerQueue.get_nowait()
 				except Queue.Empty as msg: 
 					# realistically this should never happen because we check to see that the queue is not empty
 					# but it is shared memory, and who knows?
@@ -236,8 +220,7 @@ class MotorController(Process):
 			self.driver.setDC(self.mPowers,self.direction)
 
 	def resetEncoders(self):
-		for p in self.encPipes:
-			p.send('reset')
+		self.gpioQueue.put(['resetEncoders'])
 
 	# PID part of the wheel controller loop
 	def controlPowers(self, vel, pin):	#TODO possible use mm/sec instead of m/s because it will be more accurate because floating point is bad
@@ -265,12 +248,12 @@ class MotorController(Process):
 			self.driver.setDC(self.mPowers, self.direction)
 
 	def handleEncoderQueue(self):	
-		while not self.encQueue.empty():	
+		while not util.encQueue.empty():	
 			good = True
 			try: 
 				# nowait because this process was called from the main loop which controls the motors
 				# so we don't want this function to block.
-				data = self.encQueue.get_nowait()
+				data = util.encQueue.get_nowait()
 			except Queue.Empty as msg:
 				# realistically this should never happen because we check to see that the queue is not empty
 				# but it is shared memory, and who knows?

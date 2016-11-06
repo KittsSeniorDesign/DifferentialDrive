@@ -50,4 +50,4 @@ class Encoder:
 			self.periods[self.periodIndex] = elapsedTime
 	# increment self.periodIndex and keep it within range of self.pSize = len(self.periods)
 			self.periodIndex = (self.periodIndex+1)%self.pSize;
-		self.driverQueue.put([self.pin ,self.count, self.getAveragePeriodBetweenBlips()])
+		util.encQueue.put([self.pin ,self.count, self.getAveragePeriodBetweenBlips()])

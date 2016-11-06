@@ -19,10 +19,10 @@ class CommBaseClass(Process):
 	# can also be set in handleIncomingData()
 	bytesToRead = 12
 
-	def __init__(self, recvQueue, sendQueue):
+	def __init__(self, sendQueue):
 		super(CommBaseClass, self).__init__()
-		self.recvQueue = recvQueue
-		self.sendQueue = sendQueue
+		self.recvQueue = util.controllerQueue
+		self.sendQueue = util.gcsDataQueue
 
 	def waitForConnection(self):
 		raise NotImplementedError("Override waitForConnection in class that inherits CommBaseClass")

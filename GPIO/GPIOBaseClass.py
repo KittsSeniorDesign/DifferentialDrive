@@ -11,24 +11,14 @@ class GPIOBaseClass(Process):
 	PWM = "Override in inherited class"
 	ANALOG_INPUT = "Override in inherited class"
 
-	# set in __init__
-	# used to change pin or pwm values, or to request a input or analog read
-	commandQueue = None
-	# dictionary of the form {uniqueProcessIdentifier: responsePipe, ...} where responsePipe is a connection object
-	responsePipes = None
-	# stores which processes are waiting for an edge on which pin (cfe=checkForEdge)
-	# of the form {uniqueProcessIdentifier: (pin, originalReading, timeOfInitialReading), ...}
-	cfeData = {}
 	encDict = {}
 
 	# childs init should call the super constructor 
 	# and things like 
 	#	GPIO.setmode() if raspberry pi 
 	#	or GPIO(debug=False) if edison
-	def __init__(self, commandQueue, responsePipes, encoderPins):
+	def __init__(self, encoderPins):
 		super(GPIOBaseClass, self).__init__()
-		self.commandQueue = commandQueue
-		self.responsePipes = responsePipes
 		for p in encoderPins:
 			e = Encoder()
 			self.encDict[p] = e
@@ -81,13 +71,13 @@ class GPIOBaseClass(Process):
 	# but also make sure to call this function from the super class
 	def exitGracefully(self):
 		# this is done to break out of the while loop in run so process terminates
-		self.commandQueue = None
+		util.commandQueue = None
 		#for p in self.waitingProcs:
 		#	p.join()
 
 	def consumeQueue(self):
-		while not self.commandQueue.empty():
-			a = self.commandQueue.get_nowait()
+		while not util.commandQueue.empty():
+			a = util.commandQueue.get_nowait()
 			if a:
 				if a[0] == 'setup':
 					# a[1] is pins
@@ -118,34 +108,19 @@ class GPIOBaseClass(Process):
 				elif a[0] == 'analogRead':
 					# a[1] = uniqueProcessIdentifier
 					# a[2] = pin to read
-					self.responsePipes[a[1]].send(self._analogRead(a[2]))
+					raise NotImplementedError("analogRead is unsupported")
+				elif a[0] == 'resetEncoders':
+					for key in encDict:
+						encDict[key].resetPeriod()
 
 	# it is assumed that the pin is already setup
 	def setupWaitForEdgeISR(self, callback, pin):
 		raise NotImplementedError("Override _setupWaitForEdgeISR in class that inherits GPIOBaseClass")
 
-	# will inform processes that requested to wait for an edge
-	# with a list of the form (pin, level, time elapsed since request)
-	def checkForEdges(self):
-		keysToRemove = []
-		for key in self.cfeData:
-			elapsed = time.time()-self.cfeData[key][2]
-			if elapsed > self.cfeData[key][3]:
-				self.responsePipes[key].send((self.cfeData[key][0], None, elapsed))
-				keysToRemove.append(key)
-			else:
-				currentReading = self._read(self.cfeData[key][0])
-				# if originalReading != currentReading
-				if self.cfeData[key][1] != currentReading:
-					self.responsePipes[key].send((self.cfeData[key][0], str(currentReading), time.time()-self.cfeData[key][2]))
-					keysToRemove.append(key)
-		for key in keysToRemove:
-			del self.cfeData[key]
-
 	def run(self):
 		try:
 			a = None
-			while self.commandQueue:
+			while util.commandQueue:
 				self.consumeQueue()
 				self.checkForEdges()
 		except KeyboardInterrupt as msg:
