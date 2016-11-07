@@ -1,4 +1,5 @@
-import sys
+import sys, time
+
 import util
 
 # the fastest I have seen it move is 0.511192102610497 m/s
@@ -9,18 +10,20 @@ class Encoder:
 	periods = [-1.0]*pSize
 	periodIndex = 0
 	timeout = .1
+	lastEdge = 0
 
 	def __init__(self):
 		pass
 
-	def edgeDetected(self, args):
-		sys.stdout.write("args=")
-		print args
+	def edgeDetected(self, pin):
 		self.count += 1
-		print self.count
-		self.periods[self.periodIndex] = elapsedTime
-	# increment self.periodIndex and keep it within range of self.pSize = len(self.periods)
-		self.periodIndex = (self.periodIndex+1)%self.pSize;
+		ctime = time.time()
+		elapsedTime = ctime-self.lastEdge
+		if elapsedTime <= self.timeout:
+			self.periods[self.periodIndex] = elapsedTime
+		# increment self.periodIndex and keep it within range of self.pSize = len(self.periods)
+			self.periodIndex = (self.periodIndex+1)%self.pSize;
+		self.lastEdge = ctime
 
 	def resetPeriod(self):
 		self.periods = [-1]*self.pSize
