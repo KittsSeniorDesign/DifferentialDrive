@@ -6,7 +6,7 @@ import util
 
 class Encoder:
 	count = 0
-	pSize = 40
+	pSize = 10
 	periods = [-1.0]*pSize
 	periodIndex = 0
 	timeout = .1
@@ -24,6 +24,7 @@ class Encoder:
 		# increment self.periodIndex and keep it within range of self.pSize = len(self.periods)
 			self.periodIndex = (self.periodIndex+1)%self.pSize;
 		self.lastEdge = ctime
+		util.encQueue.put([self.count])
 
 	def resetPeriod(self):
 		self.periods = [-1]*self.pSize

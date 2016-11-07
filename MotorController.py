@@ -284,7 +284,8 @@ class MotorController(Process):
 						self.controlPowers(vel, data[0])
 				elif self.state == self.ENCODER_TEST:
 					print data
-					if data[1] >= self.requiredCounts:
+					if data[0] >= self.requiredCounts:
+						print "wtf"
 						self.mPowers = [0, 0]
 						self.driver.setDC(self.mPowers, self.direction)
 						time.sleep(1)

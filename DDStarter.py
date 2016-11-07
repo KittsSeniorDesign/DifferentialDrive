@@ -67,11 +67,11 @@ class DDStarter:
 		self.gpioProcess = gpioDriver([util.leftEncPin, util.rightEncPin])
 		self.motorController = MotorController(motorDriver)
 		self.motorController.state = self.motorController.ENCODER_TEST
-		self.motorController.requiredCounts = 40
+		self.motorController.requiredCounts = 20
 		# have to setup pins afterward because gpioProcess needs to be setup first
 		self.gpioProcess.start()
 		self.motorController.start()
-		self.motorController.driver.setDC([100,100], [0,0])
+		self.motorController.driver.setDC([30,30], [0,0])
 
 
 	def runNormally(self):
