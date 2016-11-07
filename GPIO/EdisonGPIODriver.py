@@ -3,9 +3,6 @@
 from GPIOBaseClass import GPIOBaseClass
 import mraa
 import sys, os
-# so we can see util
-sys.path.append(os.path.abspath('..'))
-import util
 
 class EdisonGPIODriver(GPIOBaseClass):
 	OUTPUT = mraa.DIR_OUT
@@ -15,8 +12,8 @@ class EdisonGPIODriver(GPIOBaseClass):
 	gpioDict = {}
 	pwmDict = {}
 
-	def __init__(self, commandQueue, responsePipes):
-		super(EdisonGPIODriver, self).__init__(commandQueue, responsePipes)
+	def __init__(self, encoderPins):
+		super(EdisonGPIODriver, self).__init__(encoderPins)
 
 	# args should be tuples, list, or a single int
 	def setup(self, pins, modes):

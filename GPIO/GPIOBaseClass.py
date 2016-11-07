@@ -2,7 +2,11 @@
 
 from multiprocessing import Process
 from multiprocessing import Queue
-import time, os
+import time, os, sys
+
+sys.path.append(os.path.abspath('..'))
+import util
+from Encoder import Encoder
 
 class GPIOBaseClass(Process):
 	
@@ -71,13 +75,13 @@ class GPIOBaseClass(Process):
 	# but also make sure to call this function from the super class
 	def exitGracefully(self):
 		# this is done to break out of the while loop in run so process terminates
-		util.commandQueue = None
+		util.gpioQueue = None
 		#for p in self.waitingProcs:
 		#	p.join()
 
 	def consumeQueue(self):
-		while not util.commandQueue.empty():
-			a = util.commandQueue.get_nowait()
+		while not util.gpioQueue.empty():
+			a = util.gpioQueue.get_nowait()
 			if a:
 				if a[0] == 'setup':
 					# a[1] is pins
@@ -120,9 +124,8 @@ class GPIOBaseClass(Process):
 	def run(self):
 		try:
 			a = None
-			while util.commandQueue:
+			while util.gpioQueue:
 				self.consumeQueue()
-				self.checkForEdges()
 		except KeyboardInterrupt as msg:
 			print "KeyboardInterrupt detected. GPIOProcess is terminating"
 		finally:

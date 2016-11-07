@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import sys, os
+sys.path.append(os.path.abspath('..'))
+import util
 
 class L298Driver:
 	pwmPins = []

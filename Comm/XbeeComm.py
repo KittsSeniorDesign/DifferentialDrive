@@ -23,8 +23,8 @@ class XbeeComm(CommBaseClass):
 	# Hopefully this is the coordinator
 	dest_addr = 0
 	
-	def __init__(self, recvQueue, sendQueue):
-		super(XbeeComm, self).__init__(recvQueue, sendQueue)
+	def __init__(self):
+		super(XbeeComm, self).__init__()
 		self.ser = serial.Serial('/dev/ttyAMA0', 9600)
 		self.dataCondition = threading.Condition()
 		self.xbee = XBee(self.ser, callback=self.fillRecv)

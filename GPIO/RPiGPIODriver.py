@@ -14,10 +14,10 @@ class RPiGPIODriver(GPIOBaseClass):
 	# _pwmObjs is of the form {pin: (pwmObj, pwmStarted), ...}
 	_pwmObjs = {}
 
-	def __init__(self, commandQueue, responsePipes):
-		super(RPiGPIODriver, self).__init__(commandQueue, responsePipes)
+	def __init__(self, encoderPins):
 		GPIO.setmode(GPIO.BOARD)
 		GPIO.setwarnings(False)
+		super(RPiGPIODriver, self).__init__(encoderPins)
 
 	# args should be tuples, lists, or a single ints
 	def setup(self, pins, modes):
@@ -112,7 +112,7 @@ class RPiGPIODriver(GPIOBaseClass):
 			GPIO.output(pins, levels)
 
 	def setupWaitForEdgeISR(self, callback, pin):
-		GPIO.setup(pin, GPIO.INPUT, pull_up_down=GPIO.PUD_DOWN)
+		GPIO.setup(pin, self.INPUT, pull_up_down=GPIO.PUD_DOWN)
 		GPIO.add_event_detect(pin, GPIO.BOTH, callback=callback)
 
 	# it is assumed that pin is setup to be GPIO.INPUT

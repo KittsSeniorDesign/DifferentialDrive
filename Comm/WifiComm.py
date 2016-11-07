@@ -17,8 +17,8 @@ class WifiComm(CommBaseClass):
 	serversocket = None 
 	clientsocket = None
 
-	def __init__(self, recvQueue, sendQueue):
-		super(WifiComm, self).__init__(recvQueue, sendQueue)
+	def __init__(self):
+		super(WifiComm, self).__init__()
 		self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		self.serversocket.bind(('', 12345))

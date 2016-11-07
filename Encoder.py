@@ -1,3 +1,4 @@
+import sys
 import util
 
 # the fastest I have seen it move is 0.511192102610497 m/s
@@ -12,7 +13,9 @@ class Encoder:
 	def __init__(self):
 		pass
 
-	def edgeDetected(self):
+	def edgeDetected(self, args):
+		sys.stdout.write("args=")
+		print args
 		self.count += 1
 		print self.count
 		self.periods[self.periodIndex] = elapsedTime

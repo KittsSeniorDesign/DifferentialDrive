@@ -3,7 +3,9 @@
 from multiprocessing import Process
 from multiprocessing import Queue
 # import signal so that main threads try except statement will catch keyboard interrupt
-import thread, signal, struct, time
+import thread, signal, struct, time, sys, os
+sys.path.append(os.path.abspath('..'))
+import util
 
 class CommBaseClass(Process):
 	# This queue is filled with the data that is sent from ground control to the robot
@@ -19,7 +21,7 @@ class CommBaseClass(Process):
 	# can also be set in handleIncomingData()
 	bytesToRead = 12
 
-	def __init__(self, sendQueue):
+	def __init__(self):
 		super(CommBaseClass, self).__init__()
 		self.recvQueue = util.controllerQueue
 		self.sendQueue = util.gcsDataQueue
