@@ -121,6 +121,35 @@ class GPIOBaseClass(Process):
 	def setupWaitForEdgeISR(self, callback, pin):
 		raise NotImplementedError("Override _setupWaitForEdgeISR in class that inherits GPIOBaseClass")
 
+	def edgeDetected(self, pin):
+		self.encDict[pin].count += 1
+		ctime = time.time()
+		elapsedTime = ctime-self.encDict[pin].lastEdge
+		if elapsedTime <= self.encDict[pin].timeout:
+			self.encDict[pin].periods[self.encDict[pin].periodIndex] = elapsedTime
+		# increment self.encDict[pin].periodIndex and keep it within range of self.encDict[pin].pSize = len(self.encDict[pin].periods)
+			self.encDict[pin].periodIndex = (self.encDict[pin].periodIndex+1)%self.encDict[pin].pSize;
+		self.encDict[pin].lastEdge = ctime
+		util.encQueue.put([self.encDict[pin].count])
+
+	def resetPeriod(self):
+		self.encDict[pin].periods = [-1]*self.encDict[pin].pSize
+		self.encDict[pin].periodIndex = 0
+
+	# returns seconds/blip
+	def getAveragePeriodBetweenBlips(self):
+		ave = 0.0
+		i = 0
+		for i in range(0, self.encDict[pin].pSize):
+			if self.encDict[pin].periods[i] == -1: # invalid period, therefore return what is got
+				break
+			else:
+				ave += self.encDict[pin].periods[i]
+		# return average of valid periods, i+1 because i will never equal self.pSize
+		if i < 10:
+			return -1
+		else:
+
 	def run(self):
 		try:
 			a = None

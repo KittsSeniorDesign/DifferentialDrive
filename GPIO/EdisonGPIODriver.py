@@ -101,7 +101,7 @@ class EdisonGPIODriver(GPIOBaseClass):
 	def setupWaitForEdgeISR(self, callback, pin):
 		g = mraa.Gpio(pin)
 		g.dir(self.INPUT)
-		g.isr(mraa.EDGE_BOTH, callback, g)
+		g.isr(mraa.EDGE_BOTH, self.edgeDetected, g)
 
 	# ait is assumed that the pin was setup to be a self._gpio.INPUT before this is called
 	def _read(self, pin):
