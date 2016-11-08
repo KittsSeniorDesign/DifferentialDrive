@@ -6,7 +6,6 @@ import time, os, sys
 
 sys.path.append(os.path.abspath('..'))
 import util
-from Encoder import Encoder
 
 class GPIOBaseClass(Process):
 	
@@ -24,9 +23,7 @@ class GPIOBaseClass(Process):
 	def __init__(self, encoderPins):
 		super(GPIOBaseClass, self).__init__()
 		for p in encoderPins:
-			e = Encoder()
-			self.encDict[p] = e
-			self.setupWaitForEdgeISR(e.edgeDetected, p)
+			self.setupWaitForEdgeISR(self.edgeDetected, p)
 
 	# pins should be a tuple of which pins to setup
 	# modes should be the corresponding mode for each pin in pins
@@ -121,6 +118,9 @@ class GPIOBaseClass(Process):
 	def setupWaitForEdgeISR(self, callback, pin):
 		raise NotImplementedError("Override _setupWaitForEdgeISR in class that inherits GPIOBaseClass")
 
+	def edgeDetected(self):
+		raise NotImplementedError("Override edgeDetected in class that inherits GPIOBaseClass.")
+
 	def run(self):
 		try:
 			a = None
@@ -130,3 +130,57 @@ class GPIOBaseClass(Process):
 			print "KeyboardInterrupt detected. GPIOProcess is terminating"
 		finally:
 			self.exitGracefully()
+
+
+
+
+	count = 0
+	pSize = 10
+	periods = [-1.0]*pSize
+	periodIndex = 0
+	timeout = .1
+	lastEdge = 0
+
+	def edgeDetected(self, pin):
+		self.count += 1
+		ctime = time.time()
+		elapsedTime = ctime-self.lastEdge
+		if elapsedTime <= self.timeout:
+			self.periods[self.periodIndex] = elapsedTime
+		# increment self.periodIndex and keep it within range of self.pSize = len(self.periods)
+			self.periodIndex = (self.periodIndex+1)%self.pSize;
+		self.lastEdge = ctime
+		util.encQueue.put([self.count])
+
+	def resetPeriod(self):
+		self.periods = [-1]*self.pSize
+		self.periodIndex = 0
+
+	# returns seconds/blip
+	def getAveragePeriodBetweenBlips(self):
+		ave = 0.0
+		i = 0
+		for i in range(0, self.pSize):
+			if self.periods[i] == -1: # invalid period, therefore return what is got
+				break
+			else:
+				ave += self.periods[i]
+		# return average of valid periods, i+1 because i will never equal self.pSize
+		if i < 10:
+			return -1
+		else:
+			return ave/(i+1)
+
+	# if level = None a stall occured
+	def waitForEdgeResponse(self, level, elapsedTime):
+		if elapsedTime >= self.timeout: #Stall occured
+			#TODO handle stall
+			print "OH NO! A STALL"
+			self.count = 0
+			self.resetPeriod()
+		else:
+			self.count += 1
+			self.periods[self.periodIndex] = elapsedTime
+	# increment self.periodIndex and keep it within range of self.pSize = len(self.periods)
+			self.periodIndex = (self.periodIndex+1)%self.pSize;
+		util.encQueue.put([self.pin ,self.count, self.getAveragePeriodBetweenBlips()])

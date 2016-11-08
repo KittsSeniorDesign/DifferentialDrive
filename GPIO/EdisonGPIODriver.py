@@ -114,6 +114,60 @@ class EdisonGPIODriver(GPIOBaseClass):
 	def exitGracefully(self):
 		super(EdisonGPIODriver, self).exitGracefully()
 
+
+
+	count = 0
+	pSize = 10
+	periods = [-1.0]*pSize
+	periodIndex = 0
+	timeout = .1
+	lastEdge = 0
+
+	def edgeDetected(self, pin):
+		self.count += 1
+		ctime = time.time()
+		elapsedTime = ctime-self.lastEdge
+		if elapsedTime <= self.timeout:
+			self.periods[self.periodIndex] = elapsedTime
+		# increment self.periodIndex and keep it within range of self.pSize = len(self.periods)
+			self.periodIndex = (self.periodIndex+1)%self.pSize;
+		self.lastEdge = ctime
+		util.encQueue.put([self.count])
+
+	def resetPeriod(self):
+		self.periods = [-1]*self.pSize
+		self.periodIndex = 0
+
+	# returns seconds/blip
+	def getAveragePeriodBetweenBlips(self):
+		ave = 0.0
+		i = 0
+		for i in range(0, self.pSize):
+			if self.periods[i] == -1: # invalid period, therefore return what is got
+				break
+			else:
+				ave += self.periods[i]
+		# return average of valid periods, i+1 because i will never equal self.pSize
+		if i < 10:
+			return -1
+		else:
+			return ave/(i+1)
+
+	# if level = None a stall occured
+	def waitForEdgeResponse(self, level, elapsedTime):
+		if elapsedTime >= self.timeout: #Stall occured
+			#TODO handle stall
+			print "OH NO! A STALL"
+			self.count = 0
+			self.resetPeriod()
+		else:
+			self.count += 1
+			self.periods[self.periodIndex] = elapsedTime
+	# increment self.periodIndex and keep it within range of self.pSize = len(self.periods)
+			self.periodIndex = (self.periodIndex+1)%self.pSize;
+		util.encQueue.put([self.pin ,self.count, self.getAveragePeriodBetweenBlips()])
+
+
 if __name__ == '__main__':
 	from multiprocessing import Manager
 	from multiprocessing import Queue
@@ -127,3 +181,4 @@ if __name__ == '__main__':
 	q.put(["write", [7, 8], [0,1]])
 	q.put(["setDC", 5, 50])
 	time.sleep(5)
+
