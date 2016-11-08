@@ -26,7 +26,8 @@ class GPIOBaseClass(Process):
 		for p in encoderPins:
 			e = Encoder()
 			self.encDict[p] = e
-			self.setupWaitForEdgeISR(e.edgeDetected, p)
+			a = Process(target=self.setupWaitForEdgeISR, args=(self.edgeDetected, p))
+                        a.start()
 
 	# pins should be a tuple of which pins to setup
 	# modes should be the corresponding mode for each pin in pins
@@ -105,10 +106,6 @@ class GPIOBaseClass(Process):
 					self.write(a[1], a[2])
 				elif a[0] == 'exitGracefully':
 					self.exitGracefully()
-				elif a[0] == 'waitForEdge':
-					# a[1] = callback function for the isr
-					# a[2] = pin to wait for an edge
-					Process(target=self.setupWaitForEdgeISR, args=(a[1], a[2]))
 				elif a[0] == 'analogRead':
 					# a[1] = uniqueProcessIdentifier
 					# a[2] = pin to read
@@ -122,6 +119,7 @@ class GPIOBaseClass(Process):
 		raise NotImplementedError("Override _setupWaitForEdgeISR in class that inherits GPIOBaseClass")
 
 	def edgeDetected(self, pin):
+                print "hello"
 		self.encDict[pin].count += 1
 		ctime = time.time()
 		elapsedTime = ctime-self.encDict[pin].lastEdge

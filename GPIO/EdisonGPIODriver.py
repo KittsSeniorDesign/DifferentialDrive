@@ -45,11 +45,9 @@ class EdisonGPIODriver(GPIOBaseClass):
 	def setupPWM(self, pins, frequencies):
 		if type(pins) is list or type(pins) is tuple:
 			for i in range(0, len(pins)):
-                                print pins[i]
 				self.pwmDict[pins[i]] = [mraa.Pwm(pins[i]), False]
 				self.pwmDict[pins[i]][0].period(1.0/frequencies[i])
 		else: # must be an int
-                        print pins
 			self.pwmDict[pins] = [mraa.Pwm(pins), False]		
 			self.pwmDict[pins][0].period(1.0/frequencies)
 
@@ -75,12 +73,12 @@ class EdisonGPIODriver(GPIOBaseClass):
 						self.pwmDict[pins[i]][0].write(values[i]/100.0)
 					else:
 						self.pwmDict[pins[i]][0].write(0.0)
-						self.pwmDict[pins[i]][0].enable(False)
+						#self.pwmDict[pins[i]][0].enable(False)
 						self.pwmDict[pins[i]][1] = False
 				else:
 					print "Incorrect duty cycle value was provided"
 		else: # must be an int
-			if values >- 0 and values <= 100:
+			if values >= 0 and values <= 100:
 				if values != 0:
 					if not self.pwmDict[pins][1]:
 						self.pwmDict[pins][0].enable(True)
@@ -88,7 +86,7 @@ class EdisonGPIODriver(GPIOBaseClass):
 					self.pwmDict[pins][0].write(values/100.0)
 				else:
 					self.pwmDict[pins][0].write(0.0)
-					self.pwmDict[pins][0].enable(False)
+					#self.pwmDict[pins][0].enable(False)
 					self.pwmDict[pins][1] = False
 
 	# args should be tuples, lists, or a single int
@@ -97,7 +95,6 @@ class EdisonGPIODriver(GPIOBaseClass):
 		if type(pins) is list or type(pins) is tuple:
 			for i in range(0, len(pins)):
 				self.gpioDict[pins[i]].write(levels[i])
-                                print pins[i] 
 		else: # must be an int
 			self.gpioDict[pins].write(levels)
 
