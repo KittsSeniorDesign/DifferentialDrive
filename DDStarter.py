@@ -10,7 +10,6 @@ from multiprocessing import Manager
 import time, sys, argparse, signal
 
 from MotorController import MotorController
-from Encoder import Encoder
 import util
 
 class DDStarter:
