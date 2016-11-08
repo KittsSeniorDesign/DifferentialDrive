@@ -80,8 +80,8 @@ class GPIOBaseClass(Process):
 		#	p.join()
 
 	def consumeQueue(self):
-    		while util.gpioQueue and not util.gpioQueue.empty():
-    			a = util.gpioQueue.get_nowait()
+		while not util.gpioQueue.empty():
+			a = util.gpioQueue.get_nowait()
 			if a:
 				if a[0] == 'setup':
 					# a[1] is pins
@@ -108,7 +108,7 @@ class GPIOBaseClass(Process):
 				elif a[0] == 'waitForEdge':
 					# a[1] = callback function for the isr
 					# a[2] = pin to wait for an edge
-					self.setupWaitForEdgeISR(a[1], a[2])
+					Process(target=self.setupWaitForEdgeISR, args=(a[1], a[2]))
 				elif a[0] == 'analogRead':
 					# a[1] = uniqueProcessIdentifier
 					# a[2] = pin to read
@@ -149,8 +149,8 @@ class GPIOBaseClass(Process):
 		if i < 10:
 			return -1
 		else:
-                        return ave/(i+1)
-                
+			return ave/(i+1)
+
 	def run(self):
 		try:
 			a = None
