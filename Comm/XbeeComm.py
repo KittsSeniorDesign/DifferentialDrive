@@ -103,3 +103,30 @@ class XbeeComm(CommBaseClass):
 		# need to halt to stop process that is listening for data
 		self.xbee.halt()
 		self.ser.close()
+
+def testControllerQueue():
+	while not util.controllerQueue.empty(): # this is a while so that the most recent thing in the queue is the resultant command that is done
+		good = True
+		try:
+			# nowait because this process was called from the main loop which controls the motors
+			# so we don't want this function to block.
+			data = util.controllerQueue.get_nowait()
+		except Queue.Empty as msg: 
+			# realistically this should never happen because we check to see that the queue is not empty
+			# but it is shared memory, and who knows?
+			good = False
+		if good:	
+			print data
+
+if __name__ == '__main__':
+	from multiprocessing import Manager
+	manager = Manager()
+	util.controllerQueue = manager.Queue()
+	util.gcsDataQueue = manager.Queue()	
+	xb = XbeeComm()
+	xb.start()
+	thread.start_new_thread(testControllerQueue, ())
+	time.sleep(5)
+	for i in range(3):
+		util.gcsDataQueue.put(['derp'])
+		time.sleep(10)
