@@ -12,8 +12,6 @@ class L298Driver:
 
 
 	def __init__(self):
-		sys.path.append(os.path.abspath('..'))
-		import util
 		# TODO replace this with a read from a file
 		if util.microcontroller == 'Edison':
 			self.pwmPins = [5, 9]

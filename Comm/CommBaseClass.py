@@ -24,7 +24,7 @@ class CommBaseClass(Process):
 	def __init__(self):
 		super(CommBaseClass, self).__init__()
 		self.recvQueue = util.controllerQueue
-		self.sendQueue = util.gcsDataQueue
+		self.sendQueue = util.positionQueue
 
 	def waitForConnection(self):
 		raise NotImplementedError("Override waitForConnection in class that inherits CommBaseClass")

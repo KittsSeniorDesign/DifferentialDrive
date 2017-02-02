@@ -22,6 +22,7 @@ class DDStarter:
 	# Differential Drive Motor Controller (DDMC)
 	commProcess = None
 	gpioProcess = None
+	positionerProcess = None
 	# pipes are used to terminate processes
 	ePipeLeft = None
 	ePipeRight = None
@@ -58,6 +59,7 @@ class DDStarter:
 		# consumtion is by commProcess
 		# TODO make a process fill gcsDataQueue
 		util.gcsDataQueue = manager.Queue()
+		util.positionQueue = manager.Queue()
 
 	# TODO
 	def runEncoderTest(self):
@@ -74,24 +76,28 @@ class DDStarter:
 
 
 	def runNormally(self):
-		(motorDriver, commDriver, encoderDriver, gpioDriver) = self.determineDrivers()
+		(motorDriver, commDriver, encoderDriver, gpioDriver, positioner) = self.determineDrivers()
 		# passing arguments to processes
 		self.gpioProcess = gpioDriver([util.leftEncPin, util.rightEncPin])
 		self.motorController = MotorController(motorDriver)
 		self.commProcess = commDriver()
+		self.positionerProcess = positioner()
 		# have to setup pins afterward because gpioProcess needs to be setup first
 		self.gpioProcess.start()
 		self.motorController.start()
 		self.commProcess.start()
+		self.positionerProcess.start()
 
 	def determineDrivers(self):
 		sys.path.append('drivers/')
 		sys.path.append('GPIO/')
 		sys.path.append('Comm/')
+		sys.path.append('Positioner/')
 		# used to pull configuration from file
 		util.microcontroller = ""
 		driver = ""
 		commDriver = ""
+		positionDriver = ""
 		conf = open('config.txt', 'r')
 		line = conf.readline()
 		while line != "":
@@ -106,6 +112,8 @@ class DDStarter:
 						driver = words[2]
 					elif words[0] == 'commDriver':
 						commDriver = words[2]
+					elif words[0] == 'positionDriver':
+						postionDriver = words[2]
 			line = conf.readline()
 		conf.close()
 
@@ -113,6 +121,7 @@ class DDStarter:
 		comm = None
 		enc = None
 		gpio = None
+		postioner = None
 
 		if util.microcontroller == 'RPi':
 			try:
@@ -155,7 +164,13 @@ class DDStarter:
 			except ImportError as err:
 				print "Could not import Comm/XbeeComm"
 				sys.exit(1)
-		return (motorDriver, comm, enc, gpio)
+		if positionDriver == 'Pozxy':
+			try:
+				import PozyxPositioner
+			except ImportError as err:
+				print "Could not import Positioner/Pozyx"
+				sys.exit(1)
+		return (motorDriver, comm, enc, gpio, positioner)
 
 	def exitGracefully(self):
 		try:
@@ -167,6 +182,8 @@ class DDStarter:
 				self.motorController.join()
 			if self.gpioProcess:
 				self.gpioProcess.join()
+			if self.positionerProcess:
+				self.positionerProcess.join()
 			print "Done"
 			sys.exit(0)
 		except Exception as msg:

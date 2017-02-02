@@ -17,11 +17,12 @@ rightEncPin = 12
 
 microcontroller = None
 
-# used to change pin or pwm values, or to request a input or analog read
+# used to change pin or pwm values, or to request an input or analog read
 controllerQueue = None
 gpioQueue = None
 encQueue = None
-gcsDataQueue = None
+#gcsDataQueue = None
+positionQueue = None # TODO
 
 # returns a unique identifier for a process
 def getIdentifier(process):
