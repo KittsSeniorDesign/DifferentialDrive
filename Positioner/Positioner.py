@@ -19,16 +19,16 @@ class PositionerBaseClass(Process):
 		raise NotImplementedError("Override sendError in class that inherits PositionerBaseClass")	
 
 	def run(self):
-        try:
-            while self.go:
-                pos = self.getPosition()
-                if pos:
-                	util.positionQueue.put(pos)
-                else:
+            try:
+                while self.go:
+                    pos = self.getPosition()
+                    if pos:
+                    	util.positionQueue.put(pos)
+                    else:
                 	self.sendError()
-                time.sleep(.01)
-        except KeyboardInterrupt as msg:
-            print "KeyboardInterrupt detected. CommProcess is terminating"
-            self.go = False
-        finally:
-            self.exitGracefully()
+                    time.sleep(.01)
+            except KeyboardInterrupt as msg:
+                print "KeyboardInterrupt detected. CommProcess is terminating"
+                self.go = False
+            finally:
+                self.exitGracefully()
