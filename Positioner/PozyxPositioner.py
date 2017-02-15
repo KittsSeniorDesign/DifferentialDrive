@@ -25,10 +25,10 @@ class PozyxPositioner(PositionerBaseClass):
             remote_id = None
 
         # necessary data for calibration, change the IDs and coordinates yourself
-        anchors = [DeviceCoordinates(0xA001, 1, Coordinates(0, 0, 2790)),
-                   DeviceCoordinates(0xA002, 1, Coordinates(10490, 0, 2790)),
-                   DeviceCoordinates(0xA003, 1, Coordinates(-405, 6000, 2790)),
-                   DeviceCoordinates(0xA004, 1, Coordinates(10490, 6500, 2790))]
+        anchors = [DeviceCoordinates(0x6019, 1, Coordinates(0, 0, 1460)),
+                   DeviceCoordinates(0x6049, 1, Coordinates(3874, 0, 1460)),
+                   DeviceCoordinates(0x6044, 1, Coordinates(0, 2451, 1460)),
+                   DeviceCoordinates(0x6074, 1, Coordinates(3874, 2775, 2790))]
 
         algorithm = POZYX_POS_ALG_UWB_ONLY  # positioning algorithm to use
         dimension = POZYX_2_5D    #POZYX_3D               # positioning dimension
@@ -126,4 +126,7 @@ class PozyxPositioner(PositionerBaseClass):
         pass
 
 if __name__ == "__main__":
-    pass
+    p = PozyxPositioner()
+    while True:
+    	print(p.getPosition())
+    	sleep(.5)
