@@ -15,6 +15,9 @@ class PositionerBaseClass(Process):
 	def getPosition(self):
 		raise NotImplementedError("Override getPosition in class that inherits PositionerBaseClass")	
 
+    def getHeading(self):
+        raise NotImplementedError("Override getHeading in class that inherits PositionerBaseClass")
+
 	def sendError(self):
 		raise NotImplementedError("Override sendError in class that inherits PositionerBaseClass")	
 
@@ -22,8 +25,9 @@ class PositionerBaseClass(Process):
         try:
             while self.go:
                 pos = self.getPosition()
+                mag = self.getHeading()
                 if pos:
-                	util.positionQueue.put(pos)
+                	util.positionQueue.put((pos, mag))
                 else:
                 	self.sendError()
                 time.sleep(.01)
