@@ -13,3 +13,4 @@ microcontroller = Edison
 driver = L298
 commDriver = Wifi
 #commDriver = Xbee
+positionDriver = Pozyx
