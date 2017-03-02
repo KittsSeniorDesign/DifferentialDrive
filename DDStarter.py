@@ -166,6 +166,15 @@ class DDStarter:
 				sys.exit(1)
 			else:
 				comm = XbeeComm.XbeeComm
+		elif commDriver == 'UnixSocket':
+			try:
+				import UnixSocketComm
+			except ImportError as err:
+				print "Could not import Comm/UnixSocketComm"
+				sys.exit(1)
+			else:
+				comm = UnixSocketComm.UnixSocketComm
+
 		if positionDriver == 'Pozxy':
 			try:
 				import PozyxPositioner
