@@ -1,0 +1,6 @@
+[submodule "DataturbineExporter"]
+	path = DataturbineExporter
+	url = https://gitlab.com/DecaBot/DataturbineExporter.git
+[submodule "JUDS"]
+	path = JUDS
+	url = https://gitlab.com/DecaBot/JUDS.git
