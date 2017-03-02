@@ -20,24 +20,30 @@ class PozyxPositioner(PositionerBaseClass):
     def __init__(self):
         super(PozyxPositioner, self).__init__()
         # shortcut to not have to find out the port yourself
-        serial_port = get_serial_ports()[0].device
-
-        remote_id = 0x6069                 # remote device network ID
-        remote = False                   # whether to use a remote device
-        if not remote:
-            remote_id = None
+        serial_port = None
+        try:
+            serial_port = get_serial_ports()[0].device
+        except IndexError as msg:
+            print("Could not find serial connection to pozyx. Positioner will be turned off for this run")
+        if serial_port is not None:
+            remote_id = 0x6069                 # remote device network ID
+            remote = False                   # whether to use a remote device
+            if not remote:
+                remote_id = None
 
         # necessary data for calibration, change the IDs and coordinates yourself
-        anchors = [DeviceCoordinates(0x6019, 1, Coordinates(0, 0, 1475)),
-                   DeviceCoordinates(0x6049, 1, Coordinates(3874, 0, 1475)),
-                   DeviceCoordinates(0x6044, 1, Coordinates(0, 2451, 1475)),
-                   DeviceCoordinates(0x6074, 1, Coordinates(3874, 2775, 1475))]
+            anchors = [DeviceCoordinates(0x6019, 1, Coordinates(0, 0, 1475)),
+                       DeviceCoordinates(0x6049, 1, Coordinates(3874, 0, 1475)),
+                       DeviceCoordinates(0x6044, 1, Coordinates(0, 2451, 1475)),
+                       DeviceCoordinates(0x6074, 1, Coordinates(3874, 2775, 1475))]
 
-        algorithm = POZYX_POS_ALG_UWB_ONLY  # positioning algorithm to use
-        dimension = POZYX_2D    #POZYX_3D               # positioning dimension
-        height = 1000                      # height of device, required in 2.5D positioning
-        pozyx = PozyxSerial(serial_port)
-        self.initializePozyx(pozyx, anchors, algorithm, dimension, height, remote_id)
+            algorithm = POZYX_POS_ALG_UWB_ONLY  # positioning algorithm to use
+            dimension = POZYX_2D    #POZYX_3D               # positioning dimension
+            height = 1000                      # height of device, required in 2.5D positioning
+            pozyx = PozyxSerial(serial_port)
+            self.initializePozyx(pozyx, anchors, algorithm, dimension, height, remote_id)
+        else:
+            self.go = False
 
     def initializePozyx(self, pozyx, anchors, algorithm=POZYX_POS_ALG_UWB_ONLY, dimension=POZYX_3D, height=1000, remote_id=None):
         self.pozyx = pozyx
@@ -50,6 +56,8 @@ class PozyxPositioner(PositionerBaseClass):
         self.setAnchorsManual()
 
     def getPosition(self):
+        if not self.go:
+            return "0, 0, 0"
         position = Coordinates()
         status = self.pozyx.doPositioning(position, self.dimension, self.height, self.algorithm, remote_id=self.remote_id)
         if status == POZYX_SUCCESS:
@@ -58,6 +66,8 @@ class PozyxPositioner(PositionerBaseClass):
             return None
 
     def getHeading(self):
+        if not self.go:
+            return "0.0"
     	sensor_data = SensorData()
     	if self.remote_id is not None or self.pozyx.checkForFlag(POZYX_INT_MASK_IMU, 0.01) == POZYX_SUCCESS:
     		status = self.pozyx.getAllSensorData(sensor_data, self.remote_id)
