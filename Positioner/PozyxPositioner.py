@@ -57,6 +57,12 @@ class PozyxPositioner(PositionerBaseClass):
         else:
             return None
 
+    def getHeading(self):
+    	sensor_data = SensorData()
+    	if self.remote_id is not None or self.pozyx.checkForFlag(POZYX_INT_MASK_IMU, 0.01) == POZYX_SUCCESS:
+    		status = self.pozyx.getAllSensorData(sensor_data, self.remote_id)
+    		return sensor_data.magnetic
+
     def publishPosition(self, position):
         network_id = self.remote_id
         if network_id is None:

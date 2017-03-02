@@ -164,17 +164,16 @@ class DDStarter:
 			except ImportError as err:
 				print "Could not import Comm/XbeeComm"
 				sys.exit(1)
+			else:
+				comm = XbeeComm.XbeeComm
 		if positionDriver == 'Pozxy':
 			try:
 				import PozyxPositioner
 			except ImportError as err:
 				print "Could not import Positioner/Pozyx"
 				sys.exit(1)
-                        else:
-                                positioner = PozyxPositioner.PozyxPositioner
-                import PozyxPositioner
-                positioner = PozyxPositioner.PozyxPositioner
-
+			else:
+				positioner = PozyxPositioner.PozyxPositioner
 		return (motorDriver, comm, enc, gpio, positioner)
 
 	def exitGracefully(self):

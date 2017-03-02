@@ -15,16 +15,20 @@ class PositionerBaseClass(Process):
 	def getPosition(self):
 		raise NotImplementedError("Override getPosition in class that inherits PositionerBaseClass")	
 
+    def getHeading(self):
+        raise NotImplementedError("Override getHeading in class that inherits PositionerBaseClass")
+
 	def sendError(self):
 		raise NotImplementedError("Override sendError in class that inherits PositionerBaseClass")	
 
 	def run(self):
-            try:
-                while self.go:
-                    pos = self.getPosition()
-                    if pos:
-                    	util.positionQueue.put(pos)
-                    else:
+        try:
+            while self.go:
+                pos = self.getPosition()
+                mag = self.getHeading()
+                if pos:
+                	util.positionQueue.put((pos, mag))
+                else:
                 	self.sendError()
                     time.sleep(.01)
             except KeyboardInterrupt as msg:
