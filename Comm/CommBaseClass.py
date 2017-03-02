@@ -75,7 +75,7 @@ class CommBaseClass(Process):
 
 	def handleOutgoingData(self):
 		while not self.sendQueue.empty():
-			d = util.gcsDataQueue.get_nowait()	
+			d = self.sendQueue.get_nowait()	
 			self.send(d)
 
 	def exitGracefully(self):

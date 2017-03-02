@@ -170,6 +170,11 @@ class DDStarter:
 			except ImportError as err:
 				print "Could not import Positioner/Pozyx"
 				sys.exit(1)
+                        else:
+                                positioner = PozyxPositioner.PozyxPositioner
+                import PozyxPositioner
+                positioner = PozyxPositioner.PozyxPositioner
+
 		return (motorDriver, comm, enc, gpio, positioner)
 
 	def exitGracefully(self):

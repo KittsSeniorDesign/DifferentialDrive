@@ -53,7 +53,7 @@ class PozyxPositioner(PositionerBaseClass):
         position = Coordinates()
         status = self.pozyx.doPositioning(position, self.dimension, self.height, self.algorithm, remote_id=self.remote_id)
         if status == POZYX_SUCCESS:
-            return position
+            return str(position.x) + ", " + str(position.y) + ", " + str(position.z)
         else:
             return None
 

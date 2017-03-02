@@ -62,7 +62,9 @@ class WifiComm(CommBaseClass):
 			self.waitForConnection()
 
 	def send(self, data):
-		self.clientsocket.send(data)
+                data = data + '\n';
+                if self.clientsocket:
+		    self.clientsocket.send(data)
 			
 	def exitGracefully(self):
 		if self.clientsocket:
