@@ -76,7 +76,11 @@ class CommBaseClass(Process):
 	def handleOutgoingData(self):
 		while not self.sendQueue.empty():
 			d = self.sendQueue.get_nowait()	
-			self.send(d)
+                        a = ''
+                        for p in d:
+                            if p is not None:
+                                a += p + " "
+			self.send(a)
 
 	def exitGracefully(self):
 		raise NotImplementedError("Override exitGracefully in class that inherits CommBaseClass")

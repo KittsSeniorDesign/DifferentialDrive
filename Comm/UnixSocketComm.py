@@ -26,7 +26,7 @@ class UnixSocketComm(CommBaseClass):
 	def waitForConnection(self):
 		while not self.connected:
 			try:
-				self.sock.connect('../uds_socket')
+				self.sock.connect('uds_socket')
 				self.connected = True
 			except socket.error, msg:
 				print "couldn't connect to unix domain socket. Is the java server running?"
@@ -39,7 +39,9 @@ class UnixSocketComm(CommBaseClass):
 
 	def recv(self):
 		if self.connected:
-			return self.sock.recv(self.bytesToRead)
+			a = self.sock.recv(self.bytesToRead)
+                        print a
+                        return a
 		else:
 			return 0	
 

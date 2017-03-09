@@ -69,7 +69,8 @@ class PozyxPositioner(PositionerBaseClass):
         if not self.go:
             return "0.0"
     	sensor_data = SensorData()
-    	if self.remote_id is not None or self.pozyx.checkForFlag(POZYX_INT_MASK_IMU, 0.01) == POZYX_SUCCESS:
+        if self.remote_id is not None:
+                                        #or self.pozyx.checkForFlag(POZYX_INT_MASK_IMU, 0.01) == POZYX_SUCCESS:
     		status = self.pozyx.getAllSensorData(sensor_data, self.remote_id)
     		return sensor_data.magnetic
 
@@ -124,8 +125,5 @@ if __name__ == "__main__":
     p = PozyxPositioner()
     while True:
     	pos = p.getPosition()
-        pos.x = pos.x / 25.4
-        pos.y = pos.y / 25.4
-        pos.z = pos.z / 25.4
         print(pos)
     	sleep(.5)
