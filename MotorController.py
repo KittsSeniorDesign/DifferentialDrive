@@ -47,6 +47,10 @@ class MotorController(Process):
 	currentHeading = 0
 	requiredCounts = 0
 
+        motorOffValue = 1024
+        motorHighValue = 2048
+        motorLowValue = 0
+
 	def __init__(self, motorDriver):
 		super(MotorController, self).__init__()
 		self.driver = motorDriver()
@@ -74,8 +78,8 @@ class MotorController(Process):
 		go = False
 
 	def steeringThrottle(self, data):
-		steering = util.transform(data[1], 1000, 2000, -1, 1)
-		throttle = util.transform(data[2], 1000, 2000, -1, 1)
+		steering = util.transform(data[1], self.motorLowValue, self.motorHighValue, -1, 1)
+		throttle = util.transform(data[2], self.motorLowValue, self.motorHighValue, -1, 1)
 		# used in steering to change motor velocities 
 		maxSp = 35 
 		maxSm = 220
@@ -89,7 +93,7 @@ class MotorController(Process):
 		t = util.transform(abs(throttle), 0, 1, minMove, maxMove)
 		L = t
 		R = t
-		end = 1500
+		end = self.motorOffValue
 		if throttle < 0:
 			if steering < 0:
 				# right motor should slow down, left motor should speed up
@@ -99,7 +103,7 @@ class MotorController(Process):
 				# left motor should slow down, right motor should speed up
 				L -= sm
 				R += sp
-			end = 2000
+			end = self.motorHighValue
 		else:
 			if steering < 0:
 				# left motor should slow down, right motor should speed up
@@ -109,9 +113,9 @@ class MotorController(Process):
 				# right motor should slow down, left motor should speed up
 				L += sp
 				R -= sm
-			end = 1000
-		mL = util.transform(util.clampToRange(L, 0, 255), 0, 255, 1500, end)
-		mR = util.transform(util.clampToRange(R, 0, 255), 0, 255, 1500, end)
+			end = self.motorLowValue
+		mL = util.transform(util.clampToRange(L, 0, 255), 0, 255, self.motorOffValue, end)
+		mR = util.transform(util.clampToRange(R, 0, 255), 0, 255, self.motorOffValue, end)
 		self.changeMotorVals(mL, mR)
 
 	# this function will consume the controllerQueue, which was filled by DDMCServer
@@ -129,7 +133,7 @@ class MotorController(Process):
 			while not util.controllerQueue.empty(): # this is a while so that the most recent thing in the queue is the resultant command that is done
 				good = True
 				try:
-					# nowait because this process was called from the main loop which controls the motors
+					# nowait because this process was called from the main loop which controls the self.motors
 					# so we don't want this function to block.
 					data = util.controllerQueue.get_nowait()
 				except Queue.Empty as msg: 
@@ -137,8 +141,8 @@ class MotorController(Process):
 					# but it is shared memory, and who knows?
 					good = False
 				if good:
-					mL = 1500
-					mR = 1500
+					mL = self.motorOffValue
+					mR = self.motorOffValue
 					if data[0] == self.STEERING_THROTTLE_OFFBOARD or data[0] == self.TANK: # recieved motor level commands
 						self.state = data[0]
 						mL = data[1]
@@ -151,7 +155,7 @@ class MotorController(Process):
 						print "velHeading entered"
 						self.state = data[0]
 						self.vhState = self.TURNING
-						self.desiredVel = util.transform(data[1], 1000, 2000, -util.maxVel, util.maxVel)
+						self.desiredVel = util.transform(data[1], self.motorLowValue, self.motorHighValue, -util.maxVel, util.maxVel)
 						if abs(self.desiredVel) >= .1:
 							self.mPowers = [0, 0]
 							self.driver.setDC(self.mPowers, self.direction)
@@ -163,23 +167,23 @@ class MotorController(Process):
 	# it does not drive the motor because this function is tied to the queue
 	# and only gets executed when something is in the queue
 	# yet we want the motors to be constantly receiving contol information
-	# 1000 <= mL,mR <= 2000, 1500 means the wheels wont turn
+	# motorLowValue <= mL,mR <= motorHighValue, motorOffValue means the wheels wont turn
 	def changeMotorVals(self, mL, mR):
-		if mL > 1500:
+		if mL > self.motorOffValue:
 			self.direction[self.LEFT] = 1
-			self.mPowers[self.LEFT] = util.clampToRange(util.transform(mL, 1500, 2000, 0, 100), self.driver.minDC-1, self.driver.maxDC)
+			self.mPowers[self.LEFT] = util.clampToRange(util.transform(mL, self.motorOffValue, self.motorHighValue, 0, 100), self.driver.minDC-1, self.driver.maxDC)
 		else:
 			self.direction[self.LEFT] = 0
-			self.mPowers[self.LEFT] = util.clampToRange(util.transform(mL, 1500, 1000, 0, 100), self.driver.minDC-1, self.driver.maxDC)
+			self.mPowers[self.LEFT] = util.clampToRange(util.transform(mL, self.motorOffValue, self.motorLowValue, 0, 100), self.driver.minDC-1, self.driver.maxDC)
 		if self.mPowers[self.LEFT] < self.driver.minDC:
 			self.mPowers[self.LEFT] = 0
 
-		if mR > 1500:
+		if mR > self.motorOffValue:
 			self.direction[self.RIGHT] = 1
-			self.mPowers[self.RIGHT] = util.clampToRange(util.transform(mR, 1500, 2000, 0, 100), self.driver.minDC-1, self.driver.maxDC)
+			self.mPowers[self.RIGHT] = util.clampToRange(util.transform(mR, self.motorOffValue, self.motorHighValue, 0, 100), self.driver.minDC-1, self.driver.maxDC)
 		else :
 			self.direction[self.RIGHT] = 0
-			self.mPowers[self.RIGHT] = util.clampToRange(util.transform(mR, 1500, 1000, 0, 100), self.driver.minDC-1, self.driver.maxDC)
+			self.mPowers[self.RIGHT] = util.clampToRange(util.transform(mR, self.motorOffValue, self.motorLowValue, 0, 100), self.driver.minDC-1, self.driver.maxDC)
 		if self.mPowers[self.RIGHT] < self.driver.minDC:
 			self.mPowers[self.RIGHT] = 0
 		#print self.mPowers

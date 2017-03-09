@@ -39,9 +39,7 @@ class UnixSocketComm(CommBaseClass):
 
 	def recv(self):
 		if self.connected:
-			a = self.sock.recv(self.bytesToRead)
-                        print a
-                        return a
+                        return self.sock.recv(self.bytesToRead)
 		else:
 			return 0	
 
