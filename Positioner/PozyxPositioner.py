@@ -68,11 +68,9 @@ class PozyxPositioner(PositionerBaseClass):
     def getHeading(self):
         if not self.go:
             return "0.0"
-    	sensor_data = SensorData()
-        if self.remote_id is not None:
-                                        #or self.pozyx.checkForFlag(POZYX_INT_MASK_IMU, 0.01) == POZYX_SUCCESS:
-    		status = self.pozyx.getAllSensorData(sensor_data, self.remote_id)
-    		return sensor_data.magnetic
+        orientation = EulerAngles()
+    	status = self.pozyx.getEulerAngles_deg(orientation)
+        return str(orientation.heading)
 
     def publishPosition(self, position):
         network_id = self.remote_id

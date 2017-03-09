@@ -87,9 +87,12 @@ class CommBaseClass(Process):
 		while not self.sendQueue.empty():
 			d = self.sendQueue.get_nowait()	
                         a = ''
-                        for p in d:
+                        for i, p in enumerate(d) :
                             if p is not None:
-                                a += p + " "
+                                a += p
+                                if i != len(d)-1: 
+                                    a += ", "
+                        a += ";"
 			self.send(a)
 
 	def exitGracefully(self):
