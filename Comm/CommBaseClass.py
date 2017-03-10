@@ -19,7 +19,8 @@ class CommBaseClass(Process):
 	go = True
 	# This is to know how many bytes to read in recv(). recv() is implemented in child class
 	# can also be set in handleIncomingData()
-	bytesToRead = 12
+	#bytesToRead = 12
+	bytesToRead = 5
 
 	def __init__(self):
 		super(CommBaseClass, self).__init__()
@@ -55,13 +56,22 @@ class CommBaseClass(Process):
 				self.resetClient()
 				self.waitForConnection()
 			elif len(data) == self.bytesToRead: # fill recvQueue for pilot to consume
-				controlScheme = struct.unpack('i', data[0:4])[0]
+				controlScheme = struct.unpack('<B', data[0])[0]
+                                sys.stdout.write("controlScheme =")
+                                sys.stdout.write(str(controlScheme))
+                                print len(data)
+                                lm = struct.unpack('<h', data[1:3])[0] # left motor, steering, or velocity
+				rm = struct.unpack('<h', data[3:])[0] # right motor, throttle, or heading
+                                sys.stdout.write(" lm=")
+                                sys.stdout.write(str(lm))
+                                sys.stdout.write(" rm=")
+                                print rm
 				if controlScheme != 4: # defined as VELOCITY_HEADING in MotorController.py
 					self.recvQueue.put([
 						controlScheme, # control scheme
-						struct.unpack('i', data[4:8])[0], # left motor, steering, or velocity
-						struct.unpack('i', data[8:12])[0]]) # right motor, throttle, or heading
-				else:
+                                                1024, 
+                                                1024])
+				elif False:
 					vel = struct.unpack('i', data[4:8])[0]
 					heading = struct.unpack('<f', data[8:12])[0]
 					self.recvQueue.put([
@@ -76,7 +86,14 @@ class CommBaseClass(Process):
 	def handleOutgoingData(self):
 		while not self.sendQueue.empty():
 			d = self.sendQueue.get_nowait()	
-			self.send(d)
+                        a = ''
+                        for i, p in enumerate(d) :
+                            if p is not None:
+                                a += p
+                                if i != len(d)-1: 
+                                    a += ", "
+                        a += ";"
+			self.send(a)
 
 	def exitGracefully(self):
 		raise NotImplementedError("Override exitGracefully in class that inherits CommBaseClass")

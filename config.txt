@@ -8,9 +8,10 @@
 #driver = L298
 #commDriver = Wifi
 
-# config for Intel Edison using L298 and a Xbee
+# config for Intel Edison using L298 
 microcontroller = Edison
 driver = L298
-commDriver = Wifi
+commDriver = UnixSocket
 #commDriver = Xbee
 positionDriver = Pozyx
+

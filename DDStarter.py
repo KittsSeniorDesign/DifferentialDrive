@@ -113,10 +113,9 @@ class DDStarter:
 					elif words[0] == 'commDriver':
 						commDriver = words[2]
 					elif words[0] == 'positionDriver':
-						postionDriver = words[2]
+						positionDriver = words[2]
 			line = conf.readline()
 		conf.close()
-
 		motorDriver = None
 		comm = None
 		enc = None
@@ -130,8 +129,7 @@ class DDStarter:
 				print err
 				print "Could not import RPiGPIODriver"
 				sys.exit(1)
-			else:
-				gpio = RPiGPIODriver.RPiGPIODriver
+			gpio = RPiGPIODriver.RPiGPIODriver
 		elif util.microcontroller == 'Edison':
 			try:
 				import EdisonGPIODriver
@@ -139,8 +137,7 @@ class DDStarter:
 				print err
 				print "Could not import EdisonGPIODriver"
 				sys.exit(1)
-			else:
-				gpio = EdisonGPIODriver.EdisonGPIODriver
+			gpio = EdisonGPIODriver.EdisonGPIODriver
 
 		if driver == 'L298':
 			try:
@@ -148,32 +145,35 @@ class DDStarter:
 			except ImportError as err:
 				print "Could not import L298Driver"
 				sys.exit(1)
-			else:
-				motorDriver = L298Driver.L298Driver
+			motorDriver = L298Driver.L298Driver
 		if commDriver == 'Wifi':
 			try:
 				import WifiComm
 			except ImportError as err:
 				print "Could not import Comm/WifiComm"
 				sys.exit(1)
-			else:
-				comm = WifiComm.WifiComm
+			comm = WifiComm.WifiComm
 		elif commDriver == 'Xbee':
 			try:
 				import XbeeComm
 			except ImportError as err:
 				print "Could not import Comm/XbeeComm"
 				sys.exit(1)
-			else:
-				comm = XbeeComm.XbeeComm
-		if positionDriver == 'Pozxy':
+			comm = XbeeComm.XbeeComm
+		elif commDriver == 'UnixSocket':
+			try:
+				import UnixSocketComm
+			except ImportError as err:
+				print "Could not import Comm/UnixSocketComm"
+				sys.exit(1)
+			comm = UnixSocketComm.UnixSocketComm
+		if positionDriver == 'Pozyx':
 			try:
 				import PozyxPositioner
 			except ImportError as err:
 				print "Could not import Positioner/Pozyx"
 				sys.exit(1)
-			else:
-				positioner = PozyxPositioner.PozyxPositioner
+			positioner = PozyxPositioner.PozyxPositioner
 		return (motorDriver, comm, enc, gpio, positioner)
 
 	def exitGracefully(self):
