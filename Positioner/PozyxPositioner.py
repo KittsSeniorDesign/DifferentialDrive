@@ -35,7 +35,7 @@ class PozyxPositioner(PositionerBaseClass):
             anchors = [DeviceCoordinates(0x6019, 1, Coordinates(0, 0, 1475)),
                        DeviceCoordinates(0x6049, 1, Coordinates(3874, 0, 1475)),
                        DeviceCoordinates(0x6044, 1, Coordinates(0, 2451, 1475)),
-                       DeviceCoordinates(0x6074, 1, Coordinates(3874, 2775, 1475))]
+                       DeviceCoordinates(0x607F, 1, Coordinates(3874, 2775, 1475))]
 
             algorithm = POZYX_POS_ALG_UWB_ONLY  # positioning algorithm to use
             dimension = POZYX_2D    #POZYX_3D               # positioning dimension
@@ -123,5 +123,7 @@ if __name__ == "__main__":
     p = PozyxPositioner()
     while True:
     	pos = p.getPosition()
+        head = p.getHeading()
         print(pos)
+        print(head)
     	sleep(.5)
