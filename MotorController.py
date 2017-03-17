@@ -116,6 +116,7 @@ class MotorController(Process):
 			end = self.motorLowValue
 		mL = util.transform(util.clampToRange(L, 0, 255), 0, 255, self.motorOffValue, end)
 		mR = util.transform(util.clampToRange(R, 0, 255), 0, 255, self.motorOffValue, end)
+                #sys.stdout.write(str(mL) + " " + str(mR) + "\n")
 		self.changeMotorVals(mL, mR)
 
 	# this function will consume the controllerQueue, which was filled by DDMCServer
@@ -149,6 +150,7 @@ class MotorController(Process):
 						mR = data[2]
 						self.changeMotorVals(mL, mR)
 					elif data[0] == self.STEERING_THROTTLE_ONBOARD: # recieved joystick information (throttle, steering)
+                                                print data
 						self.state = data[0]
 						self.steeringThrottle(data)# this calls changeMotorVals()
 					elif data[0] == self.VELOCITY_HEADING:

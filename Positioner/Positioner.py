@@ -29,7 +29,7 @@ class PositionerBaseClass(Process):
                     if pos:
                 	util.positionQueue.put((pos, mag))
                     else:
-                	self.sendError()
+                	print "pos undef"
                     time.sleep(.01)
             except KeyboardInterrupt as msg:
                 print "KeyboardInterrupt detected. CommProcess is terminating"

@@ -20,7 +20,7 @@ class CommBaseClass(Process):
 	# This is to know how many bytes to read in recv(). recv() is implemented in child class
 	# can also be set in handleIncomingData()
 	#bytesToRead = 12
-	bytesToRead = 5
+	bytesToRead = 6
 
 	def __init__(self):
 		super(CommBaseClass, self).__init__()
@@ -52,25 +52,19 @@ class CommBaseClass(Process):
 		self.waitForConnection()
 		while self.go:
 			data = self.recv()
-			if len(data) == 0:
+	                if len(data) == 0:
 				self.resetClient()
 				self.waitForConnection()
 			elif len(data) == self.bytesToRead: # fill recvQueue for pilot to consume
-				controlScheme = struct.unpack('<B', data[0])[0]
-                                sys.stdout.write("controlScheme =")
-                                sys.stdout.write(str(controlScheme))
-                                print len(data)
-                                lm = struct.unpack('<h', data[1:3])[0] # left motor, steering, or velocity
-				rm = struct.unpack('<h', data[3:])[0] # right motor, throttle, or heading
-                                sys.stdout.write(" lm=")
-                                sys.stdout.write(str(lm))
-                                sys.stdout.write(" rm=")
-                                print rm
+                                srcdstids = struct.unpack('<B', data[0])[0]
+				controlScheme = struct.unpack('<B', data[1])[0]
 				if controlScheme != 4: # defined as VELOCITY_HEADING in MotorController.py
+                                        lm = struct.unpack('<h', data[2:4])[0] # left motor, steering, or velocity
+			    	        rm = struct.unpack('<h', data[4:])[0] # right motor, throttle, or heading
 					self.recvQueue.put([
 						controlScheme, # control scheme
-                                                1024, 
-                                                1024])
+                                                lm, 
+                                                rm])
 				elif False:
 					vel = struct.unpack('i', data[4:8])[0]
 					heading = struct.unpack('<f', data[8:12])[0]

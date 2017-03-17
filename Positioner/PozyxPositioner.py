@@ -32,13 +32,13 @@ class PozyxPositioner(PositionerBaseClass):
                 remote_id = None
 
         # necessary data for calibration, change the IDs and coordinates yourself
-            anchors = [DeviceCoordinates(0x6019, 1, Coordinates(0, 0, 1475)),
-                       DeviceCoordinates(0x6049, 1, Coordinates(3874, 0, 1475)),
-                       DeviceCoordinates(0x6044, 1, Coordinates(0, 2451, 1475)),
-                       DeviceCoordinates(0x6074, 1, Coordinates(3874, 2775, 1475))]
+            anchors = [DeviceCoordinates(0x6019, 1, Coordinates(0, 0, 196)),
+                       DeviceCoordinates(0x6049, 1, Coordinates(3874, 0, 232)),
+                       DeviceCoordinates(0x6044, 1, Coordinates(0, 2451, 174)),
+                       DeviceCoordinates(0x607F, 1, Coordinates(3874, 2775, 155))]
 
             algorithm = POZYX_POS_ALG_UWB_ONLY  # positioning algorithm to use
-            dimension = POZYX_2D    #POZYX_3D               # positioning dimension
+            dimension = POZYX_3D    #POZYX_3D               # positioning dimension
             height = 1000                      # height of device, required in 2.5D positioning
             pozyx = PozyxSerial(serial_port)
             self.initializePozyx(pozyx, anchors, algorithm, dimension, height, remote_id)
@@ -59,7 +59,8 @@ class PozyxPositioner(PositionerBaseClass):
         if not self.go:
             return "0, 0, 0"
         position = Coordinates()
-        status = self.pozyx.doPositioning(position, self.dimension, self.height, self.algorithm, remote_id=self.remote_id)
+        status = self.pozyx.doPositioning(position, self.dimension, 
+self.height, self.algorithm, remote_id=self.remote_id)
         if status == POZYX_SUCCESS:
             return str(position.x) + ", " + str(position.y) + ", " + str(position.z)
         else:
@@ -123,5 +124,8 @@ if __name__ == "__main__":
     p = PozyxPositioner()
     while True:
     	pos = p.getPosition()
-        print(pos)
+        head = p.getHeading()
+	if pos:
+        	print(pos)
+                print(head)
     	sleep(.5)

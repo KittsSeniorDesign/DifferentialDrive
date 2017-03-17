@@ -14,8 +14,8 @@ class L298Driver:
 	def __init__(self):
 		# TODO replace this with a read from a file
 		if util.microcontroller == 'Edison':
-			self.pwmPins = [5, 9]
-			self.dirPins = [[7, 8], [10, 6]] 
+			self.pwmPins = [3, 9]
+			self.dirPins = [[5, 6], [7, 8]] 
 		elif util.microcontroller == 'RPi':
 			self.pwmPins = [38, 37]
 			self.dirPins = [[31,32], [33,35]]
