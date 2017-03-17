@@ -36,7 +36,6 @@ class PozyxPositioner(PositionerBaseClass):
                        DeviceCoordinates(0x6049, 1, Coordinates(3874, 0, 232)),
                        DeviceCoordinates(0x6044, 1, Coordinates(0, 2451, 174)),
                        DeviceCoordinates(0x607F, 1, Coordinates(3874, 2775, 155))]
-
             algorithm = POZYX_POS_ALG_UWB_ONLY  # positioning algorithm to use
             dimension = POZYX_3D    #POZYX_3D               # positioning dimension
             height = 1000                      # height of device, required in 2.5D positioning
@@ -125,7 +124,12 @@ if __name__ == "__main__":
     while True:
     	pos = p.getPosition()
         head = p.getHeading()
+<<<<<<< HEAD
 	if pos:
         	print(pos)
                 print(head)
+=======
+        print(pos)
+        print(head)
+>>>>>>> c15b409739531b0c1d9816b3f1ffb836d5b7c184
     	sleep(.5)
