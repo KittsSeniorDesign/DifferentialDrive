@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd ../
+
 pip install pyserial
 
 git clone https://github.com/pozyxLabs/Pozyx-Python-library.git && cd Pozyx-Python-library
@@ -17,7 +19,6 @@ cd DataturbineExporter
 make -j2 JAR=/usr/lib/jvm/java-8-openjdk/bin/jar 
 cd ../
 
-git clone https://github.com/KittsSeniorDesign/DifferentialDrive.git
 cp DataturbineExporter/build/DataturbineExporter.jar DifferentialDrive/
 cp JUDS/juds.jar DifferentialDrive/
 
