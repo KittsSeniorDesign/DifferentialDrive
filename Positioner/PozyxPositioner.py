@@ -58,8 +58,7 @@ class PozyxPositioner(PositionerBaseClass):
         if not self.go:
             return "0, 0, 0"
         position = Coordinates()
-        status = self.pozyx.doPositioning(position, self.dimension, 
-self.height, self.algorithm, remote_id=self.remote_id)
+        status = self.pozyx.doPositioning(position, self.dimension, self.height, self.algorithm, remote_id=self.remote_id)
         if status == POZYX_SUCCESS:
             return str(position.x) + ", " + str(position.y) + ", " + str(position.z)
         else:

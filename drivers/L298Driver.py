@@ -10,7 +10,6 @@ class L298Driver:
 	maxDC = 100
 	minDC = 20
 
-
 	def __init__(self):
 		# TODO replace this with a read from a file
 		if util.microcontroller == 'Edison':

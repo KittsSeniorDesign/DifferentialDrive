@@ -23,6 +23,7 @@ gpioQueue = None
 encQueue = None
 #gcsDataQueue = None
 positionQueue = None # TODO
+positionTelemQueue = None
 
 # returns a unique identifier for a process
 def getIdentifier(process):

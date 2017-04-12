@@ -25,7 +25,7 @@ class CommBaseClass(Process):
 	def __init__(self):
 		super(CommBaseClass, self).__init__()
 		self.recvQueue = util.controllerQueue
-		self.sendQueue = util.positionQueue
+		self.sendQueue = util.positionTelemQueue
 
 	def waitForConnection(self):
 		raise NotImplementedError("Override waitForConnection in class that inherits CommBaseClass")
@@ -56,7 +56,7 @@ class CommBaseClass(Process):
 				self.resetClient()
 				self.waitForConnection()
 			elif len(data) == self.bytesToRead: # fill recvQueue for pilot to consume
-                                srcdstids = struct.unpack('<B', data[0])[0]
+				srcdstids = struct.unpack('<B', data[0])[0]
 				controlScheme = struct.unpack('<B', data[1])[0]
 				if controlScheme != 4: # defined as VELOCITY_HEADING in MotorController.py
                                         lm = struct.unpack('<h', data[2:4])[0] # left motor, steering, or velocity
@@ -80,13 +80,13 @@ class CommBaseClass(Process):
 	def handleOutgoingData(self):
 		while not self.sendQueue.empty():
 			d = self.sendQueue.get_nowait()	
-                        a = ''
-                        for i, p in enumerate(d) :
-                            if p is not None:
-                                a += p
-                                if i != len(d)-1: 
-                                    a += ", "
-                        a += ";"
+			a = ''
+			for i, p in enumerate(d) :
+				if p is not None:
+					a += p
+					if i != len(d)-1: 
+						a += ", "
+			a += ";"
 			self.send(a)
 
 	def exitGracefully(self):
