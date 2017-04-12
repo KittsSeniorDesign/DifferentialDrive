@@ -319,7 +319,7 @@ class MotorController(Process):
 		x = wx-mPos[0].x
 		y = wy-mPos[0].y
 		if x > self.waypointThresh or y > self.waypointThresh:
-			d = math.sqrt(x*x+y*y)
+			#distance to travel = math.sqrt(x*x+y*y)
 			theta = math.atan2(y,x)
 			phi = theta-(mPos[1]-math.pi)
 			if phi < 0 :
