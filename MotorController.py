@@ -316,12 +316,12 @@ class MotorController(Process):
 			while not util.positionQueue.empty():
 				mPos = util.positionQueue.get_nowait()
 		# mPos[0] = mPos_x, mPos[1] = mPos_y, mPos[2] = mPos_heading
-		x = wx-mPos[0]
-		y = wy-mPos[1]
+		x = wx-mPos[0].x
+		y = wy-mPos[0].y
 		if x > self.waypointThresh or y > self.waypointThresh:
 			d = math.sqrt(x*x+y*y)
 			theta = math.atan2(y,x)
-			phi = theta-(mPos[2]-math.pi)
+			phi = theta-(mPos[1]-math.pi)
 			if phi < 0 :
 				rm = self.waypointTravelSpeed
 				lm = self.waypointTravelSpeed*math.cos(phi)
