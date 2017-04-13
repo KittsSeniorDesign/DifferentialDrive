@@ -55,11 +55,8 @@ class DDStarter:
 		util.encQueue = manager.Queue()
 		util.controllerQueue = manager.Queue()
 		util.gpioQueue = manager.Queue()
-		# Only consumed at this time
-		# consumtion is by commProcess
-		# TODO make a process fill gcsDataQueue
-		util.gcsDataQueue = manager.Queue()
 		util.positionQueue = manager.Queue()
+		util.positionTelemQueue = manager.Queue()
 
 	# TODO
 	def runEncoderTest(self):

@@ -22,7 +22,8 @@ class MotorController(Process):
 	STEERING_THROTTLE_ONBOARD = 2
 	TANK = 3
 	VELOCITY_HEADING = 4
-	ENCODER_TEST = 5
+	WAYPOINT = 5
+	ENCODER_TEST = 6
 	state = STEERING_THROTTLE_OFFBOARD
 
 	# possible velocity heading states
@@ -47,9 +48,13 @@ class MotorController(Process):
 	currentHeading = 0
 	requiredCounts = 0
 
-        motorOffValue = 1024
-        motorHighValue = 2048
-        motorLowValue = 0
+	motorOffValue = 1024
+	motorHighValue = 2048
+	motorLowValue = 0
+
+	waypointTravelSpeed = 75 # out of 100
+	waypointThresh = 5 # centimeters
+	waypoints = []
 
 	def __init__(self, motorDriver):
 		super(MotorController, self).__init__()
@@ -150,7 +155,7 @@ class MotorController(Process):
 						mR = data[2]
 						self.changeMotorVals(mL, mR)
 					elif data[0] == self.STEERING_THROTTLE_ONBOARD: # recieved joystick information (throttle, steering)
-                                                print data
+						print data
 						self.state = data[0]
 						self.steeringThrottle(data)# this calls changeMotorVals()
 					elif data[0] == self.VELOCITY_HEADING:
@@ -163,6 +168,15 @@ class MotorController(Process):
 							self.driver.setDC(self.mPowers, self.direction)
 						self.desiredHeading = data[2]
 						self.goToHeading(self.desiredHeading)
+					elif data[0] == self.WAYPOINT:
+						self.state = data[0]
+						self.waypoints.append((data[1], data[2]))
+						self.waypointNavigation(data[1], data[2])
+					if self.state != self.WAYPOINT:
+						# consume the queue so that way when the robot is switched to waypoint, it gets fresh data
+						while not util.positionQueue.empty():
+							util.positionQueue.get_nowait()
+						self.waypoints = []
 					self.lastQueue = time.time()
 
 	# this sets up the values used to drive the motors 
@@ -299,6 +313,35 @@ class MotorController(Process):
 						self.requiredCounts = util.stateChangesPerRevolution
 						self.driver.setDC(self.mPowers, self.direction)
 
+	def waypointNavigation(self):
+		mPos = None
+		while not mPos:
+			# consume queue until we get newest data
+			while not util.positionQueue.empty():
+				mPos = util.positionQueue.get_nowait()
+		x = self.waypoints[0][0]-mPos[0].x
+		y = self.waypoints[0][1]-mPos[0].y
+		if x > self.waypointThresh or y > self.waypointThresh:
+			#distance to travel = math.sqrt(x*x+y*y)
+			theta = math.atan2(y,x)
+			phi = theta-(mPos[1]-math.pi)
+			if phi < 0 :
+				rm = self.waypointTravelSpeed
+				lm = self.waypointTravelSpeed*math.cos(phi)
+			elif phi > 0:
+				rm = self.waypointTravelSpeed*math.cos(phi)
+				lm = self.waypointTravelSpeed
+			else:
+				lm = self.waypointTravelSpeed
+				rm = self.waypointTravelSpeed
+			self.mPowers = [math.fabs(rm), math.fabs(lm)]
+			self.direction = [0 if rm > 0 else 1, 0 if lm > 0 else 1]
+		else:
+			self.waypoints.pop(0)
+			self.mPowers = [0, 0]
+			self.direction = [0, 0]
+		self.driver.setDC(self.mPowers, self.direction)
+
 	def run(self):
 		self.go = True
 		try:
@@ -307,6 +350,8 @@ class MotorController(Process):
 			#	print self.direction
 				self.handleControllerQueue()
 				self.handleEncoderQueue()
+				if self.state == self.WAYPOINT and len(self.waypoints) > 0:
+					self.waypointNavigation()
 		except KeyboardInterrupt as msg:
 			print "KeyboardInterrupt detected. MotorContoller is terminating"
 			self.go = False	

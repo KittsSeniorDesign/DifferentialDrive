@@ -15,8 +15,8 @@ class PositionerBaseClass(Process):
 	def getPosition(self):
 		raise NotImplementedError("Override getPosition in class that inherits PositionerBaseClass")	
 
-        def getHeading(self):
-            raise NotImplementedError("Override getHeading in class that inherits PositionerBaseClass")
+	def getHeading(self):
+		raise NotImplementedError("Override getHeading in class that inherits PositionerBaseClass")
 
 	def sendError(self):
 		raise NotImplementedError("Override sendError in class that inherits PositionerBaseClass")	
@@ -27,10 +27,11 @@ class PositionerBaseClass(Process):
                     pos = self.getPosition()
                     mag = self.getHeading()
                     if pos:
-                	util.positionQueue.put((pos, mag))
+						util.positionQueue.put((pos, mag))
+						util.positionTelemQueue.put((pos, mag))
                     else:
-                	print "pos undef"
-                    time.sleep(.01)
+						print "pos undef"
+                    time.sleep(.3)
             except KeyboardInterrupt as msg:
                 print "KeyboardInterrupt detected. CommProcess is terminating"
                 self.go = False
