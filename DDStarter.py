@@ -167,6 +167,7 @@ class DDStarter:
 				print "Could not import Comm/UnixSocketComm"
 				sys.exit(1)
 			comm = UnixSocketComm.UnixSocketComm
+                import PozyxPositioner
 		if positionDriver == 'Pozyx':
 			try:
 				import PozyxPositioner
