@@ -31,6 +31,7 @@ class UnixSocketComm(CommBaseClass):
 			except socket.error, msg:
 				print "couldn't connect to unix domain socket. Is the java server running?"
 				print >>sys.stderr, msg
+                                time.sleep(1)
 
 	def resetClient(self):
 		super(UnixSocketComm, self).resetClient()

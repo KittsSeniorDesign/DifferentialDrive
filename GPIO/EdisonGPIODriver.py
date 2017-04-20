@@ -127,8 +127,7 @@ if __name__ == '__main__':
 	util.gpioQueue.put(["setup", [5, 6, 7, 8], ["OUTPUT", "OUTPUT", "OUTPUT", "OUTPUT"]])
 	util.gpioQueue.put(["setup", [3, 9], ["PWM", "PWM"]])
 	util.gpioQueue.put(["write", [5, 6, 7, 8], [0, 1, 0, 1]])
-	util.gpioQueue.put(["setDC", [3, 9], [25,50]])
+	util.gpioQueue.put(["setDC", [3, 9], [50,50]])
 	time.sleep(1)
 	util.gpioQueue.put(["setDC", [3, 9], [0,0]])
         time.sleep(1)
-        util.gpioQueue = None
