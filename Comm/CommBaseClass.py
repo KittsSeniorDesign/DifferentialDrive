@@ -58,14 +58,21 @@ class CommBaseClass(Process):
 			elif len(data) == self.bytesToRead: # fill recvQueue for pilot to consume
 				srcdstids = struct.unpack('<B', data[0])[0]
 				controlScheme = struct.unpack('<B', data[1])[0]
-				if controlScheme != 4: # defined as VELOCITY_HEADING in MotorController.py
+				if controlScheme != 5: # defined as VELOCITY_HEADING in MotorController.py
                                         lm = struct.unpack('<h', data[2:4])[0] # left motor, steering, or velocity
 			    	        rm = struct.unpack('<h', data[4:])[0] # right motor, throttle, or heading
 					self.recvQueue.put([
 						controlScheme, # control scheme
                                                 lm, 
                                                 rm])
-				elif False:
+				elif controlScheme == 5:
+                                        wx = struct.unpack('<h', data[2:4])[0]
+                                        wy = struct.unpack('<h', data[4:])[0]
+                                        self.recvQueue.put([
+                                                controlScheme,
+                                                wx,
+                                                wy])
+                                elif False:
 					vel = struct.unpack('i', data[4:8])[0]
 					heading = struct.unpack('<f', data[8:12])[0]
 					self.recvQueue.put([

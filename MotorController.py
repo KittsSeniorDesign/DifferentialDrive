@@ -171,7 +171,7 @@ class MotorController(Process):
 					elif data[0] == self.WAYPOINT:
 						self.state = data[0]
 						self.waypoints.append((data[1], data[2]))
-						self.waypointNavigation(data[1], data[2])
+						self.waypointNavigation()
 					if self.state != self.WAYPOINT:
 						# consume the queue so that way when the robot is switched to waypoint, it gets fresh data
 						while not util.positionQueue.empty():
@@ -314,17 +314,17 @@ class MotorController(Process):
 						self.driver.setDC(self.mPowers, self.direction)
 
 	def waypointNavigation(self):
-		mPos = None
-		while not mPos:
-			# consume queue until we get newest data
-			while not util.positionQueue.empty():
-				mPos = util.positionQueue.get_nowait()
-		x = self.waypoints[0][0]-mPos[0].x
-		y = self.waypoints[0][1]-mPos[0].y
+		# consume queue until we get newest data
+		while not util.positionQueue.empty():
+		    pos, mheading= util.positionQueue.get_nowait()
+                    mx, my, mz = pos.split(", ")            
+                print mx
+		x = self.waypoints[0][0]-int(mx)
+		y = self.waypoints[0][1]-int(my)
 		if x > self.waypointThresh or y > self.waypointThresh:
 			#distance to travel = math.sqrt(x*x+y*y)
 			theta = math.atan2(y,x)
-			phi = theta-(math.radians(mPos[1])-math.pi)
+			phi = theta-(math.radians(float(mheading))-math.pi)
 			if phi < 0 :
 				rm = self.waypointTravelSpeed
 				lm = self.waypointTravelSpeed*math.cos(phi)
@@ -340,6 +340,7 @@ class MotorController(Process):
 			self.waypoints.pop(0)
 			self.mPowers = [0, 0]
 			self.direction = [0, 0]
+                print self.mPowers
 		self.driver.setDC(self.mPowers, self.direction)
 
 	def run(self):

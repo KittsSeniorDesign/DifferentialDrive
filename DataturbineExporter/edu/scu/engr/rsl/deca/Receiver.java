@@ -77,13 +77,12 @@ public class Receiver extends Thread {
 						// splitData[0] should be the name of the sink that is to be reconfigured (might not correspond to this controller)
 						// splitData[1] should be either w or r for waypoint navigation, or reconfiguring a sink
 						String[] splitData = data.split(" ");
-						System.out.println(splitData);
-						System.out.println(m_sinkName);
 						if(splitData[0].equals(m_sinkName)) { // need to reconfigure our sink
 							if(splitData[1].equals("r")) {  // need to reconfigure our sink 
 								// splitData[2] is the new channel the sink should listen to
 								reconfigureSink(splitData[2]);
 							} else if(splitData[1].equals("w")) {
+								System.out.println("waypionting");
 								travelToWaypoint(splitData[2], splitData[3]);
 							}
 						}
@@ -107,11 +106,12 @@ public class Receiver extends Thread {
 
 	private void travelToWaypoint(String wx, String wy) {
 		byte[] message = new byte[6];
-		message[0] = 5; // means waypoint navigation
-		message[1] = (byte) (Integer.parseInt(wx) >> 8);
-		message[2] = (byte) Integer.parseInt(wx);
-		message[3] = (byte) (Integer.parseInt(wy) >> 8);
-		message[4] = (byte) Integer.parseInt(wy);
+		message[0] = 0;
+		message[1] = 5; // means waypoint navigation
+		message[2] = (byte) (Integer.parseInt(wx) >> 8);
+		message[3] = (byte) Integer.parseInt(wx);
+		message[4] = (byte) (Integer.parseInt(wy) >> 8);
+		message[5] = (byte) Integer.parseInt(wy);
 		try {
 			client.write(message);
 		} catch (IOException e) {

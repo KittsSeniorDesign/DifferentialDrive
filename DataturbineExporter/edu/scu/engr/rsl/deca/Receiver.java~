@@ -68,7 +68,6 @@ public class Receiver extends Thread {
 				for(int i = 0; i < getmap.NumberOfChannels(); i++) {
 					byte[] message = getmap.GetData(i);
 					if(getmap.GetName(i).equals("_UI_Source/_UI") || getmap.GetName(i).equals("_UI")) { // we may be getting asked to reconfigure our sink
-						System.out.println("FROM UI");
 
 						String data = "";
 						for(int j = 0; j < message.length; j++) {
@@ -83,6 +82,7 @@ public class Receiver extends Thread {
 								// splitData[2] is the new channel the sink should listen to
 								reconfigureSink(splitData[2]);
 							} else if(splitData[1].equals("w")) {
+								System.out.println("waypionting");
 								travelToWaypoint(splitData[2], splitData[3]);
 							}
 						}
@@ -106,11 +106,12 @@ public class Receiver extends Thread {
 
 	private void travelToWaypoint(String wx, String wy) {
 		byte[] message = new byte[6];
-		message[0] = 5; // means waypoint navigation
-		message[1] = (byte) (Integer.parseInt(wx) >> 8);
-		message[2] = (byte) Integer.parseInt(wx);
-		message[3] = (byte) (Integer.parseInt(wy) >> 8);
-		message[4] = (byte) Integer.parseInt(wy);
+		message[0] = 0
+		message[1] = 5; // means waypoint navigation
+		message[2] = (byte) (Integer.parseInt(wx) >> 8);
+		message[3] = (byte) Integer.parseInt(wx);
+		message[4] = (byte) (Integer.parseInt(wy) >> 8);
+		message[5] = (byte) Integer.parseInt(wy);
 		try {
 			client.write(message);
 		} catch (IOException e) {
