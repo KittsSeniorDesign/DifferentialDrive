@@ -52,9 +52,13 @@ class MotorController(Process):
 	motorHighValue = 2048
 	motorLowValue = 0
 
-	waypointTravelSpeed = 75 # out of 100
-	waypointThresh = 5 # centimeters
+	waypointTravelSpeed = 50 # out of 100
+	waypointThresh = 50 # millimeters
 	waypoints = []
+        mx = 0
+        my = 0
+        mz = 0
+        mheading = 0
 
 	def __init__(self, motorDriver):
 		super(MotorController, self).__init__()
@@ -155,7 +159,7 @@ class MotorController(Process):
 						mR = data[2]
 						self.changeMotorVals(mL, mR)
 					elif data[0] == self.STEERING_THROTTLE_ONBOARD: # recieved joystick information (throttle, steering)
-						print data
+						#print data
 						self.state = data[0]
 						self.steeringThrottle(data)# this calls changeMotorVals()
 					elif data[0] == self.VELOCITY_HEADING:
@@ -205,6 +209,7 @@ class MotorController(Process):
 		#print self.mPowers
 
 		if self.state != self.VELOCITY_HEADING:
+                        print self.mPowers
 			self.driver.setDC(self.mPowers,self.direction)
 		# VELOCITY_HEADING mode calls setDC from either goToHeading, or setDCbyVel
 
@@ -316,15 +321,14 @@ class MotorController(Process):
 	def waypointNavigation(self):
 		# consume queue until we get newest data
 		while not util.positionQueue.empty():
-		    pos, mheading= util.positionQueue.get_nowait()
-                    mx, my, mz = pos.split(", ")            
-                print mx
-		x = self.waypoints[0][0]-int(mx)
-		y = self.waypoints[0][1]-int(my)
+		    pos, self.mheading= util.positionQueue.get_nowait()
+                    self.mx, self.my, self.mz = pos.split(", ")            
+		x = self.waypoints[0][0]-int(self.mx)
+		y = self.waypoints[0][1]-int(self.my)
 		if x > self.waypointThresh or y > self.waypointThresh:
 			#distance to travel = math.sqrt(x*x+y*y)
 			theta = math.atan2(y,x)
-			phi = theta-(math.radians(float(mheading))-math.pi)
+			phi = theta-(math.radians(float(self.mheading))-math.pi)
 			if phi < 0 :
 				rm = self.waypointTravelSpeed
 				lm = self.waypointTravelSpeed*math.cos(phi)
@@ -335,12 +339,12 @@ class MotorController(Process):
 				lm = self.waypointTravelSpeed
 				rm = self.waypointTravelSpeed
 			self.mPowers = [math.fabs(rm), math.fabs(lm)]
-			self.direction = [0 if rm > 0 else 1, 0 if lm > 0 else 1]
+			self.direction = [0 if rm < 0 else 1, 0 if lm < 0 else 1]
 		else:
 			self.waypoints.pop(0)
 			self.mPowers = [0, 0]
 			self.direction = [0, 0]
-                print self.mPowers
+                        print("Waypoint done")
 		self.driver.setDC(self.mPowers, self.direction)
 
 	def run(self):

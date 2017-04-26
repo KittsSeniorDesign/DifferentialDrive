@@ -110,6 +110,7 @@ public class Receiver extends Thread {
 		message[1] = 5; // means waypoint navigation
 		message[2] = (byte) (Integer.parseInt(wx) >> 8);
 		message[3] = (byte) Integer.parseInt(wx);
+		System.out.println(wx);
 		message[4] = (byte) (Integer.parseInt(wy) >> 8);
 		message[5] = (byte) Integer.parseInt(wy);
 		try {

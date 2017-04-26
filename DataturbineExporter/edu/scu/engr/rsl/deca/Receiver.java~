@@ -106,7 +106,7 @@ public class Receiver extends Thread {
 
 	private void travelToWaypoint(String wx, String wy) {
 		byte[] message = new byte[6];
-		message[0] = 0
+		message[0] = 0;
 		message[1] = 5; // means waypoint navigation
 		message[2] = (byte) (Integer.parseInt(wx) >> 8);
 		message[3] = (byte) Integer.parseInt(wx);

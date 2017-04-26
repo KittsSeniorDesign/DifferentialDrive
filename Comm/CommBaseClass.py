@@ -66,8 +66,9 @@ class CommBaseClass(Process):
                                                 lm, 
                                                 rm])
 				elif controlScheme == 5:
-                                        wx = struct.unpack('<h', data[2:4])[0]
-                                        wy = struct.unpack('<h', data[4:])[0]
+                                        wx = struct.unpack('>h', data[2:4])[0]
+                                        print wx
+                                        wy = struct.unpack('>h', data[4:])[0]
                                         self.recvQueue.put([
                                                 controlScheme,
                                                 wx,

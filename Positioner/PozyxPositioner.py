@@ -18,7 +18,7 @@ import math
 
 class PozyxPositioner(PositionerBaseClass):
     go = True
-
+    array = [] 
     def __init__(self):
         super(PozyxPositioner, self).__init__()
         # shortcut to not have to find out the port yourself
@@ -39,7 +39,7 @@ class PozyxPositioner(PositionerBaseClass):
                        DeviceCoordinates(0x6044, 1, Coordinates(0, 2496, 1720)),
                        DeviceCoordinates(0x607F, 1, Coordinates(3848, 2831, 1669))]
             algorithm = POZYX_POS_ALG_UWB_ONLY  # positioning algorithm to use
-            dimension = POZYX_3D    #POZYX_3D               # positioning dimension
+            dimension = POZYX_2D    #POZYX_3D               # positioning dimension
             height = 0                      # height of device, required in 2.5D positioning
             pozyx = PozyxSerial(serial_port)
             self.initializePozyx(pozyx, anchors, algorithm, dimension, height, remote_id)
@@ -130,43 +130,57 @@ class PozyxPositioner(PositionerBaseClass):
         return math.sqrt(self.average(self.variance(s)))
 
 if __name__ == "__main__":
-
+    sample_size = 30
+    array_size = 5
+    flag = 0
     p = PozyxPositioner()
-    ax = [0]*10
-    ay = [0]*10
-    az = [0]*10
+    ax = [0] * array_size
+    ay = [0] * array_size
+    az = [0] * array_size
 
-    for num in range(0,15):
-        inum = num % 10
+    for num in range(0,sample_size):
+        inum = num % array_size
         pos = p.getPosition()
         px, py, pz = pos.split(', ', 2) 
         px = int(px)
         py = int(py)
         pz = int(pz)
-        if num < 10:
+        if num < array_size:
             ax[num] = px
             ay[num] = py
             az[num] = pz
+            print(px, py, pz)
         else:
             avgx = p.average(ax)
             avgy = p.average(ay)
             avgz = p.average(az)
-            print(avgx, avgy, avgz)
-            if abs(px-avgx) < 50 and abs(py-avgy) < 50 and abs(pz-avgz) < 50: 
+            print('avg: ' + str(avgx), str(avgy), str(avgz))
+            if abs(px-avgx) < 560 and abs(py-avgy) < 560 and abs(pz-avgz) < 560: 
                 ax[inum] = px
                 ay[inum] = py
                 az[inum] = pz
-        if pos:
-            print(px, py, pz)
+                print(px, py, pz)
+                flag = 0
+            else:
+                if flag > 2:
+                    ax[inum] = px
+                    ay[inum] = py
+                    az[inum] = pz
+                    print('new pos: ' + str(px), str(py), str(pz))
+                else:
+                    print('dropped: ' + str(px), str(py), str(pz))
+                    flag = flag + 1
+                
+
         sleep(.5)
-    print(ax)
-    print(ay)
-    print(az)
+    print('array of x: ' + str(ax))
+    print('array of y: ' + str(ay))
+    print('array of z: ' + str(az))
     sx = p.std_dev(ax)
     sy = p.std_dev(ay)
     sz = p.std_dev(az)
-    print(p.average(ax), p.average(ay), p.average(az))
-    print('x: ' + str(sx), 'y: ' + str(sy), 'z: ' + str(sz))
+    print('total avg: ' + str(p.average(ax)), str(p.average(ay)), str(p.average(az)))
+    print('std dev of x: ' + str(sx), 'y: ' + str(sy), 'z: ' + str(sz))
     #while True:
     	#pos = p.getPosition()
         #head = p.getHeading()
