@@ -52,8 +52,8 @@ class MotorController(Process):
 	motorHighValue = 2048
 	motorLowValue = 0
 
-	waypointTravelSpeed = 50 # out of 100
-	waypointThresh = 50 # millimeters
+	waypointTravelSpeed = 30 # out of 100
+	waypointThresh = 100 # millimeters
 	waypoints = []
         mx = 0
         my = 0
@@ -320,25 +320,39 @@ class MotorController(Process):
 
 	def waypointNavigation(self):
 		# consume queue until we get newest data
+                do = False
 		while not util.positionQueue.empty():
 		    pos, self.mheading= util.positionQueue.get_nowait()
                     self.mx, self.my, self.mz = pos.split(", ")            
+                    do = True
+                if not do:
+                    return
 		x = self.waypoints[0][0]-int(self.mx)
 		y = self.waypoints[0][1]-int(self.my)
-		if x > self.waypointThresh or y > self.waypointThresh:
+		if math.fabs(x) > self.waypointThresh or math.fabs(y) > self.waypointThresh:
 			#distance to travel = math.sqrt(x*x+y*y)
 			theta = math.atan2(y,x)
-			phi = theta-(math.radians(float(self.mheading))-math.pi)
-			if phi < 0 :
+			phi = theta-float(self.mheading)
+                        if phi > math.pi:
+                            phi -= 2*math.pi
+                        elif phi < -math.pi:
+                            phi += 2*math.pi
+                        if phi > 0.20 and phi < math.pi/2.0:
 				rm = self.waypointTravelSpeed
 				lm = self.waypointTravelSpeed*math.cos(phi)
-			elif phi > 0:
+			elif phi < -0.20 and phi > math.pi/2.0:
 				rm = self.waypointTravelSpeed*math.cos(phi)
 				lm = self.waypointTravelSpeed
+                        elif phi > math.pi/2.0:
+                                rm = self.waypointTravelSpeed*.65
+                                lm = 0
+                        elif phi < -math.pi/2.0:
+                                rm = 0
+                                lm = self.waypointTravelSpeed*.65
 			else:
-				lm = self.waypointTravelSpeed
 				rm = self.waypointTravelSpeed
-			self.mPowers = [math.fabs(rm), math.fabs(lm)]
+				lm = self.waypointTravelSpeed
+			self.mPowers = [math.fabs(lm), math.fabs(rm)]
 			self.direction = [0 if rm < 0 else 1, 0 if lm < 0 else 1]
 		else:
 			self.waypoints.pop(0)

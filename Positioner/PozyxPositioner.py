@@ -18,7 +18,15 @@ import math
 
 class PozyxPositioner(PositionerBaseClass):
     go = True
-    array = [] 
+    aSize = 5
+    ax = [0] * aSize
+    ay = [0] * aSize
+    flag = 0
+    num = 0
+    deltathres = 250
+    thresmax = deltathres * 2
+    px = 0
+    py = 0
     def __init__(self):
         super(PozyxPositioner, self).__init__()
         # shortcut to not have to find out the port yourself
@@ -34,10 +42,10 @@ class PozyxPositioner(PositionerBaseClass):
                 remote_id = None
 
         # necessary data for calibration, change the IDs and coordinates yourself
-            anchors = [DeviceCoordinates(0x6019, 1, Coordinates(0, 0, 1601)),
-                       DeviceCoordinates(0x6049, 1, Coordinates(3843, 0, 1692)),
-                       DeviceCoordinates(0x6044, 1, Coordinates(0, 2496, 1720)),
-                       DeviceCoordinates(0x607F, 1, Coordinates(3848, 2831, 1669))]
+            anchors = [DeviceCoordinates(0x6019, 1, Coordinates(0, 0, 1482)),
+                       DeviceCoordinates(0x6049, 1, Coordinates(3921, 0, 1759)),
+                       DeviceCoordinates(0x6044, 1, Coordinates(0, 2579, 1670)),
+                       DeviceCoordinates(0x607F, 1, Coordinates(3946, 2854, 1575))]
             algorithm = POZYX_POS_ALG_UWB_ONLY  # positioning algorithm to use
             dimension = POZYX_2D    #POZYX_3D               # positioning dimension
             height = 0                      # height of device, required in 2.5D positioning
@@ -62,7 +70,8 @@ class PozyxPositioner(PositionerBaseClass):
         position = Coordinates()
         status = self.pozyx.doPositioning(position, self.dimension, self.height, self.algorithm, remote_id=self.remote_id)
         if status == POZYX_SUCCESS:
-            return str(position.x) + ", " + str(position.y) + ", " + str(position.z)
+            return self.mMedian(position)
+            #return self.filtering(position)
         else:
             return None
 
@@ -71,7 +80,9 @@ class PozyxPositioner(PositionerBaseClass):
             return "0.0"
         orientation = EulerAngles()
     	status = self.pozyx.getEulerAngles_deg(orientation)
-        return str(orientation.heading)
+        heading = -math.radians(orientation.heading)
+        heading = heading if heading >= -math.pi else heading+2*math.pi
+        return str(heading)
 
     def publishPosition(self, position):
         network_id = self.remote_id
@@ -120,6 +131,49 @@ class PozyxPositioner(PositionerBaseClass):
     def exitGracefully(self):
         pass
 
+    def mMedian(self, position):
+        inum = self.num % self.aSize
+        if self.num < self.aSize:
+            self.ax[self.num] = position.x
+            self.ay[self.num] = position.y
+        else:
+            self.ax[inum] = position.x
+            self.ay[inum] = position.y
+        self.ax.sort()
+        self.ay.sort()
+        self.px = self.ax[2]
+        self.py = self.ay[2]
+        self.num = self.num + 1
+        return str(self.px) + ", " + str(self.py) + ", " + str(0)
+
+    def filtering(self, position):
+        inum = self.num % self.aSize
+        if self.num < self.aSize:
+            self.ax[self.num] = position.x
+            self.ay[self.num] = position.y
+            self.px = position.x
+            self.py = position.y
+        else:
+            avgx = self.average(self.ax)
+            avgy = self.average(self.ay)
+            if abs(position.x-avgx) < self.deltathres and abs(position.y-avgy) < self.deltathres:
+                self.ax[inum] = position.x
+                self.ay[inum] = position.y
+                self.px = position.x
+                self.py = position.y
+                self.flag = 0
+            else:
+                if self.flag > 8 and abs(position.x-avgx) < self.thresmax and abs(position.y-avgy) < self.thresmax:
+                    self.ax[inum] = position.x
+                    self.ax[inum] = position.y
+                    self.px = position.x
+                    self.py = position.y
+                    self.flag = self.flag - 3
+                else:
+                    self.flag = self.flag + 1
+        self.num = self.num + 1
+        return  str(self.px) + ", " + str(self.py) + ", " + str(0)
+        
     def average(self, s):
         return sum(s) * 1.0 / len(s)
     
@@ -130,57 +184,17 @@ class PozyxPositioner(PositionerBaseClass):
         return math.sqrt(self.average(self.variance(s)))
 
 if __name__ == "__main__":
-    sample_size = 30
-    array_size = 5
-    flag = 0
     p = PozyxPositioner()
-    ax = [0] * array_size
-    ay = [0] * array_size
-    az = [0] * array_size
 
-    for num in range(0,sample_size):
-        inum = num % array_size
+    while True:
         pos = p.getPosition()
         px, py, pz = pos.split(', ', 2) 
         px = int(px)
         py = int(py)
         pz = int(pz)
-        if num < array_size:
-            ax[num] = px
-            ay[num] = py
-            az[num] = pz
-            print(px, py, pz)
-        else:
-            avgx = p.average(ax)
-            avgy = p.average(ay)
-            avgz = p.average(az)
-            print('avg: ' + str(avgx), str(avgy), str(avgz))
-            if abs(px-avgx) < 560 and abs(py-avgy) < 560 and abs(pz-avgz) < 560: 
-                ax[inum] = px
-                ay[inum] = py
-                az[inum] = pz
-                print(px, py, pz)
-                flag = 0
-            else:
-                if flag > 2:
-                    ax[inum] = px
-                    ay[inum] = py
-                    az[inum] = pz
-                    print('new pos: ' + str(px), str(py), str(pz))
-                else:
-                    print('dropped: ' + str(px), str(py), str(pz))
-                    flag = flag + 1
+        print(px, py, pz)
                 
-
-        sleep(.5)
-    print('array of x: ' + str(ax))
-    print('array of y: ' + str(ay))
-    print('array of z: ' + str(az))
-    sx = p.std_dev(ax)
-    sy = p.std_dev(ay)
-    sz = p.std_dev(az)
-    print('total avg: ' + str(p.average(ax)), str(p.average(ay)), str(p.average(az)))
-    print('std dev of x: ' + str(sx), 'y: ' + str(sy), 'z: ' + str(sz))
+        sleep(.3)
     #while True:
     	#pos = p.getPosition()
         #head = p.getHeading()

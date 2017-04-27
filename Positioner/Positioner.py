@@ -31,7 +31,7 @@ class PositionerBaseClass(Process):
 						util.positionTelemQueue.put((pos, mag))
                     else:
 						print "pos undef"
-                    time.sleep(.3)
+                    time.sleep(.2)
             except KeyboardInterrupt as msg:
                 print "KeyboardInterrupt detected. CommProcess is terminating"
                 self.go = False
