@@ -114,7 +114,8 @@ class EdisonGPIODriver(GPIOBaseClass):
 	def exitGracefully(self):
 		super(EdisonGPIODriver, self).exitGracefully()
 
-if __name__ == '__main__':
+def primeMotors():
+    try:
 	from multiprocessing import Manager
 	from multiprocessing import Queue
 	import time, sys, os
@@ -127,7 +128,14 @@ if __name__ == '__main__':
 	util.gpioQueue.put(["setup", [5, 6, 7, 8], ["OUTPUT", "OUTPUT", "OUTPUT", "OUTPUT"]])
 	util.gpioQueue.put(["setup", [3, 9], ["PWM", "PWM"]])
 	util.gpioQueue.put(["write", [5, 6, 7, 8], [0, 1, 0, 1]])
-	util.gpioQueue.put(["setDC", [3, 9], [50,50]])
+	util.gpioQueue.put(["setDC", [3, 9], [1,1]])
 	time.sleep(.1)
 	util.gpioQueue.put(["setDC", [3, 9], [0,0]])
-        time.sleep(1)
+        time.sleep(.5)
+        sys.exit(0)
+        print "good"
+    except:
+        sys.exit(0)
+
+if __name__ == '__main__':
+        primeMotors()

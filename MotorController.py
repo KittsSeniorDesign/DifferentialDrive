@@ -340,7 +340,7 @@ class MotorController(Process):
                         if phi > 0.20 and phi < math.pi/2.0:
 				rm = self.waypointTravelSpeed
 				lm = self.waypointTravelSpeed*math.cos(phi)
-			elif phi < -0.20 and phi > math.pi/2.0:
+			elif phi < -0.20 and phi > -math.pi/2.0:
 				rm = self.waypointTravelSpeed*math.cos(phi)
 				lm = self.waypointTravelSpeed
                         elif phi > math.pi/2.0:
