@@ -1,7 +1,7 @@
 #!/bin/bash
 cd DataturbineExporter
 make clean
-make -j2 JAR=/usr/lib/jvm/java-8-openjdk/bin/jar
+make -j2 
 cp build/DataturbineExporter.jar ../
 cd ../
 

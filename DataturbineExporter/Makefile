@@ -23,12 +23,12 @@ $(CLASSES): | $(BLD_DIR)/$(SRC_DIR)/
 
 # The way jar works is colossally dumb.
 $(TARGET): $(CLASSES)
-	@printf "\e[1;32m%5s\e[m $@\n" JAR
+#	@printf "\e[1;32m%5s\e[m $@\n" JAR
 	@$(JAR) cfm $@ $(MANIFEST) $(addprefix -C $(BLD_DIR) ,$(subst $(BLD_DIR)/,,$^))
 	@cp $(DEPS) $(BLD_DIR)
 
 $(BLD_DIR)/%.class: %.java
-	@printf "\e[1;34m%5s\e[m $<\n" JAVAC
+#	@printf "\e[1;34m%5s\e[m $<\n" JAVAC
 	@$(JAVAC) -classpath $(CLASSPATH) -sourcepath . -d $(BLD_DIR) $<
 
 $(BLD_DIR):
