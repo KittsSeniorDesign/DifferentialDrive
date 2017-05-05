@@ -52,7 +52,7 @@ class MotorController(Process):
 	motorHighValue = 2048
 	motorLowValue = 0
 
-	waypointTravelSpeed = 30 # out of 100
+	waypointTravelSpeed = 50 # out of 100
 	waypointThresh = 100 # millimeters
 	waypoints = []
         mx = 0

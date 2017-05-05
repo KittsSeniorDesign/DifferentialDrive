@@ -32,8 +32,8 @@ class PozyxPositioner(PositionerBaseClass):
         # shortcut to not have to find out the port yourself
         serial_port = None
         try:
-            serial_port = get_serial_ports()[0].device
-        except IndexError as msg:
+            serial_port = get_serial_ports()[0][0]
+        except Exception as msg:
             print("Could not find serial connection to pozyx. Positioner will be turned off for this run")
         if serial_port is not None:
             remote_id = 0x6048                 # remote device network ID

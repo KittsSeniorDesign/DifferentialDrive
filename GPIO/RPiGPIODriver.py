@@ -126,3 +126,33 @@ class RPiGPIODriver(GPIOBaseClass):
 	def exitGracefully(self):
 		super(RPiGPIODriver, self).exitGracefully()
 		GPIO.cleanup()
+
+def primeMotors():
+    try:
+        from multiprocessing import Manager
+        from multiprocessing import Queue
+        import time, sys, os
+        sys.path.append(os.path.abspath('..'))
+        import util
+        m = Manager()
+        util.gpioQueue = m.Queue()
+        e = RPiGPIODriver([])
+        e.start()
+        util.gpioQueue.put(["setup", [31, 32, 33, 35], ["OUTPUT", "OUTPUT", "OUTPUT", "OUTPUT"]])
+        util.gpioQueue.put(["setup", [38, 37], ["PWM", "PWM"]])
+	print "ok"
+        util.gpioQueue.put(["write", [31, 32, 33, 35], [0, 1, 0, 1]])
+	time.sleep(1)
+	print "ok"
+        util.gpioQueue.put(["setDC", [38, 37], [50,50]])
+        time.sleep(1)
+	print "ok"
+        util.gpioQueue.put(["setDC", [38, 37], [0,0]])
+        time.sleep(.5)
+	print "ok"
+        print "good"
+    except:
+	print "bad"
+
+if __name__ == '__main__':
+	primeMotors()	
