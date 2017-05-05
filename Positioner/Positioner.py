@@ -9,6 +9,8 @@ import util
 
 class PositionerBaseClass(Process):
 
+        timeBetweenPositionUpdates = .1
+
 	def __init__(self):
 		super(PositionerBaseClass, self).__init__()
 
@@ -31,7 +33,7 @@ class PositionerBaseClass(Process):
 						util.positionTelemQueue.put((pos, mag))
                     else:
 						print "pos undef"
-                    time.sleep(.2)
+                    time.sleep(self.timeBetweenPositionUpdates)
             except KeyboardInterrupt as msg:
                 print "KeyboardInterrupt detected. CommProcess is terminating"
                 self.go = False

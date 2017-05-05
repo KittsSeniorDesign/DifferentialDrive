@@ -32,6 +32,7 @@ class PozyxPositioner(PositionerBaseClass):
         # shortcut to not have to find out the port yourself
         serial_port = None
         try:
+            print get_serial_ports()[0].device
             serial_port = get_serial_ports()[0].device
         except IndexError as msg:
             print("Could not find serial connection to pozyx. Positioner will be turned off for this run")
@@ -42,10 +43,14 @@ class PozyxPositioner(PositionerBaseClass):
                 remote_id = None
 
         # necessary data for calibration, change the IDs and coordinates yourself
-            anchors = [DeviceCoordinates(0x6019, 1, Coordinates(0, 0, 1482)),
-                       DeviceCoordinates(0x6049, 1, Coordinates(3921, 0, 1759)),
-                       DeviceCoordinates(0x6044, 1, Coordinates(0, 2579, 1670)),
-                       DeviceCoordinates(0x607F, 1, Coordinates(3946, 2854, 1575))]
+            #anchors = [DeviceCoordinates(0x6019, 1, Coordinates(0, 0, 1482)),
+            #           DeviceCoordinates(0x6049, 1, Coordinates(3921, 0, 1759)),
+            #           DeviceCoordinates(0x6044, 1, Coordinates(0, 2579, 1670)),
+            #           DeviceCoordinates(0x607F, 1, Coordinates(3946, 2854, 1575))]
+            anchors = [DeviceCoordinates(0x6019, 1, Coordinates(0, 0, 73)),
+                       DeviceCoordinates(0x6049, 1, Coordinates(3921, 0, 73)),
+                       DeviceCoordinates(0x6044, 1, Coordinates(0, 2579, 73)),
+                       DeviceCoordinates(0x607F, 1, Coordinates(3946, 2854, 73))]
             algorithm = POZYX_POS_ALG_UWB_ONLY  # positioning algorithm to use
             dimension = POZYX_2D    #POZYX_3D               # positioning dimension
             height = 0                      # height of device, required in 2.5D positioning

@@ -52,8 +52,8 @@ class MotorController(Process):
 	motorHighValue = 2048
 	motorLowValue = 0
 
-	waypointTravelSpeed = 30 # out of 100
-	waypointThresh = 100 # millimeters
+	waypointTravelSpeed = 35 # out of 100
+	waypointThresh = 75 # millimeters
 	waypoints = []
         mx = 0
         my = 0
@@ -337,16 +337,16 @@ class MotorController(Process):
                             phi -= 2*math.pi
                         elif phi < -math.pi:
                             phi += 2*math.pi
-                        if phi > 0.20 and phi < math.pi/2.0:
+                        if phi > 0.10 and phi < math.pi/2.0:
 				rm = self.waypointTravelSpeed
-				lm = self.waypointTravelSpeed*math.cos(phi)
-			elif phi < -0.20 and phi > -math.pi/2.0:
-				rm = self.waypointTravelSpeed*math.cos(phi)
+				lm = self.waypointTravelSpeed*math.cos(phi)*.4
+			elif phi < -0.10 and phi > -math.pi/2.0:
+				rm = self.waypointTravelSpeed*math.cos(phi)*.4
 				lm = self.waypointTravelSpeed
-                        elif phi > math.pi/2.0:
+                        elif phi < 3.1 and phi > math.pi/2.0:
                                 rm = self.waypointTravelSpeed*.65
                                 lm = 0
-                        elif phi < -math.pi/2.0:
+                        elif phi > -3.1 and phi < -math.pi/2.0:
                                 rm = 0
                                 lm = self.waypointTravelSpeed*.65
 			else:
