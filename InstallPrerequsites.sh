@@ -7,8 +7,8 @@ make
 cd ../
 git clone https://github.com/pozyxLabs/Pozyx-Python-library.git
 cd Pozyx-Python-library/
-python setup.py install
+sudo python setup.py install
 cd ../
-pip install pyserial
+sudo pip install pyserial
 cd DifferentialDrive
 ./UpdateDataturbineExporter.sh

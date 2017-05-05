@@ -168,6 +168,7 @@ class DDStarter:
 			try:
 				import PozyxPositioner
 			except ImportError as err:
+				print err
 				print "Could not import Positioner/Pozyx"
 				sys.exit(1)
 			positioner = PozyxPositioner.PozyxPositioner
